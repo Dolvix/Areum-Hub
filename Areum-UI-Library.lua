@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Universal Modular Edition)
 -- =========================================================================
-print("[ UI Library Version: 2.031.1 | Supports Loader Versions From 2.000.0 ]")
+print("[ UI Library Version: 2.032.1 | Supports Loader Versions From 2.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -139,7 +139,7 @@ function AreumUI:CreateWindow(config)
     TitleLabel.Parent = Sidebar
 
     local r, g, b = math.floor(window.ThemeData.Accent.R * 255), math.floor(window.ThemeData.Accent.G * 255), math.floor(window.ThemeData.Accent.B * 255)
-    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)"size="16">Hub</font>]], r, g, b)
+    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font><font color="rgb(255,255,255)" size="16">Hub</font>]], r, g, b)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
