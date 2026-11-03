@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.373.2 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.374.1 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -261,7 +261,7 @@ task.spawn(function()
         if wayfinding then
             local buildHere = wayfinding:FindFirstChild("BUILD HERE")
             if buildHere then
-                bridge_newest_position = buildHere.CFrame
+                bridge_newest_position = buildHere.Position
             end
         end
     end
@@ -318,7 +318,7 @@ task.spawn(function()
 
             if not bridge_newest_position and env.SCRIPT_ACTIVE then
                 if hrp then 
-                    forceAnchor(true)
+                    forceAnchor(false)
                 end
                 repeat task.wait(0.02) until bridge_newest_position or not env.AUTO_FARM or not env.SCRIPT_ACTIVE
             end
@@ -326,11 +326,11 @@ task.spawn(function()
             if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount > 0 then
                 forceAnchor(false)
                 task.wait()
-                hrp.CFrame = bridge_newest_position
+                hrp.Position = bridge_newest_position + Vector3.new(0,2,0)
                 task.wait()
                 
                 if env.AUTO_FARM and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" then 
-                    forceAnchor(true) 
+                    forceAnchor(false) 
                 end
 
                 -- Optimized: Press E down once instead of spamming keypress/keyrelease every frame
@@ -349,7 +349,7 @@ task.spawn(function()
                     keyrelease(0x45)
                 end
                 
-                forceAnchor(true)
+                forceAnchor(false)
             end
         else
             if hrp and hrp.Anchored then
