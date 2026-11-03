@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-local version = "2.471.7"
+local version = "2.471.8"
 print(`[ Loader Version: v{version} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)

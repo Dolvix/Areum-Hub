@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Universal Modular Edition)
 -- =========================================================================
-print("[ UI Library Version: 2.032.2 | Supports Loader Versions From 2.000.0 ]")
+print("[ UI Library Version: 2.033.1 | Supports Loader Versions From 2.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -21,6 +21,14 @@ local Themes = {
         Accent = Color3.fromRGB(118, 0, 214),
         TextMuted = Color3.fromRGB(150, 150, 150)
     },
+    Xmas = {
+        Background = Color3.fromRGB(3, 85, 0),
+        Sidebar = Color3.fromRGB(221, 19, 19),
+        Row = Color3.fromRGB(152, 194, 3),
+        Stroke = Color3.fromRGB(40, 119, 3),
+        Accent = Color3.fromRGB(27, 216, 2),
+        TextMuted = Color3.fromRGB(2, 114, 11)
+    },
     Blue = {
         Background = Color3.fromRGB(10, 14, 20),
         Sidebar = Color3.fromRGB(6, 9, 14),
@@ -36,7 +44,15 @@ local Themes = {
         Stroke = Color3.fromRGB(52, 28, 28),
         Accent = Color3.fromRGB(255, 85, 85),
         TextMuted = Color3.fromRGB(200, 150, 150)
-    }
+    },
+    Light = {
+        Background = Color3.fromRGB(247, 245, 245),
+        Sidebar = Color3.fromRGB(168, 167, 167),
+        Row = Color3.fromRGB(107, 107, 107),
+        Stroke = Color3.fromRGB(32, 32, 32),
+        Accent = Color3.fromRGB(177, 176, 176),
+        TextMuted = Color3.fromRGB(68, 68, 68)
+    },
 }
 
 -- 1. Library Initialization (CreateWindow)
