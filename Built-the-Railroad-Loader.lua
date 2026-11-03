@@ -24,7 +24,7 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
 -- UI Module Link (Replace with your actual raw Gist link for the Universal UI Module)
-local UIModuleLink = ""
+local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-UI-Library.lua"
 
 -- Load Universal UI Module asynchronously
 task.spawn(function()
