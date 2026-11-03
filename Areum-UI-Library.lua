@@ -1,0 +1,496 @@
+-- Universal AreumUI Library Module
+local AreumUI = {}
+AreumUI.__index = AreumUI
+
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+
+-- Global Themes Palette
+local Themes = {
+    Violet = {
+        Background = Color3.fromRGB(12, 12, 12),
+        Sidebar = Color3.fromRGB(7, 7, 7),
+        Row = Color3.fromRGB(18, 18, 18),
+        Stroke = Color3.fromRGB(24, 0, 34),
+        Accent = Color3.fromRGB(118, 0, 214),
+        TextMuted = Color3.fromRGB(150, 150, 150)
+    },
+    Blue = {
+        Background = Color3.fromRGB(10, 14, 20),
+        Sidebar = Color3.fromRGB(6, 9, 14),
+        Row = Color3.fromRGB(16, 22, 32),
+        Stroke = Color3.fromRGB(28, 42, 64),
+        Accent = Color3.fromRGB(60, 160, 255),
+        TextMuted = Color3.fromRGB(140, 165, 200)
+    },
+    Crimson = {
+        Background = Color3.fromRGB(16, 10, 10),
+        Sidebar = Color3.fromRGB(10, 6, 6),
+        Row = Color3.fromRGB(26, 16, 16),
+        Stroke = Color3.fromRGB(52, 28, 28),
+        Accent = Color3.fromRGB(255, 85, 85),
+        TextMuted = Color3.fromRGB(200, 150, 150)
+    }
+}
+
+-- 1. Library Initialization (CreateWindow)
+function AreumUI:CreateWindow(config)
+    config = config or {}
+    local window = setmetatable({}, AreumUI)
+    
+    window.TitleText = config.Title or "Areum Hub"
+    window.CurrentThemeName = config.Theme or "Violet"
+    window.ToggleKey = config.ToggleKey or Enum.KeyCode.LeftControl
+    window.ThemeData = Themes[window.CurrentThemeName] or Themes.Violet
+    
+    window.Pages = {}
+    window.TabButtons = {}
+    window.ActiveTab = nil
+    window.Connections = {}
+
+    -- Parent target handling
+    local targetParent = typeof(gethui) == "function" and gethui() or CoreGui
+
+    -- ScreenGui Setup
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "AreumHub_Universal"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.IgnoreGuiInset = true
+    ScreenGui.DisplayOrder = 9999999
+    ScreenGui.Parent = targetParent
+    window.ScreenGui = ScreenGui
+
+    -- Main Frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 560, 0, 380)
+    MainFrame.Position = UDim2.new(0.5, -280, 0.5, -190)
+    MainFrame.BackgroundColor3 = window.ThemeData.Background
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Parent = ScreenGui
+    window.MainFrame = MainFrame
+
+    local MainCorner = Instance.new("UICorner")
+    MainCorner.CornerRadius = UDim.new(0, 12)
+    MainCorner.Parent = MainFrame
+
+    local MainStroke = Instance.new("UIStroke")
+    MainStroke.Thickness = 1.5
+    MainStroke.Color = window.ThemeData.Stroke
+    MainStroke.Parent = MainFrame
+
+    -- Custom Smooth Dragging
+    local dragging, dragInput, dragStart, startPos
+    MainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MainFrame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    table.insert(window.Connections, RunService.RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - dragStart
+            MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end))
+
+    -- Sidebar Setup
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Name = "Sidebar"
+    Sidebar.Size = UDim2.new(0, 160, 1, 0)
+    Sidebar.BackgroundColor3 = window.ThemeData.Sidebar
+    Sidebar.BorderSizePixel = 0
+    Sidebar.Parent = MainFrame
+
+    local SidebarCorner = Instance.new("UICorner")
+    SidebarCorner.CornerRadius = UDim.new(0, 12)
+    SidebarCorner.Parent = Sidebar
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Name = "TitleLabel"
+    TitleLabel.Size = UDim2.new(1, -16, 0, 60)
+    TitleLabel.Position = UDim2.new(0, 16, 0, 10)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.RichText = true
+    
+    local r, g, b = math.floor(window.ThemeData.Accent.R * 255), math.floor(window.ThemeData.Accent.G * 255), math.floor(window.ThemeData.Accent.B * 255)
+    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)">%s</font>]], r, g, b, window.TitleText)
+    TitleLabel.Font = Enum.Font.GothamMedium
+    TitleLabel.TextSize = 20
+    TitleLabel.TextColor3 = Color3.fromRGB(245, 245, 245)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = Sidebar
+
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Name = "TabContainer"
+    TabContainer.Size = UDim2.new(1, -16, 1, -85)
+    TabContainer.Position = UDim2.new(0, 8, 0, 75)
+    TabContainer.BackgroundTransparency = 1
+    TabContainer.BorderSizePixel = 0
+    TabContainer.ScrollBarThickness = 0
+    TabContainer.Parent = Sidebar
+
+    local TabListLayout = Instance.new("UIListLayout")
+    TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabListLayout.Padding = UDim.new(0, 6)
+    TabListLayout.Parent = TabContainer
+    window.TabContainer = TabContainer
+
+    -- Content Frame
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Name = "ContentFrame"
+    ContentFrame.Size = UDim2.new(1, -170, 1, -24)
+    ContentFrame.Position = UDim2.new(0, 165, 0, 12)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.Parent = MainFrame
+    window.ContentFrame = ContentFrame
+
+    -- Global Visibility Bind
+    table.insert(window.Connections, UserInputService.InputBegan:Connect(function(input, gpe)
+        if not gpe and input.KeyCode == window.ToggleKey then
+            MainFrame.Visible = not MainFrame.Visible
+        end
+    end))
+
+    return window
+end
+
+-- 2. Tab Creation (CreateTab)
+function AreumUI:CreateTab(name, iconAssetId)
+    local tab = {}
+    tab.Window = self
+    tab.Name = name
+
+    -- Create Page Container
+    local Page = Instance.new("ScrollingFrame")
+    Page.Name = name .. "Page"
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.BackgroundTransparency = 1
+    Page.BorderSizePixel = 0
+    Page.ScrollBarThickness = 2
+    Page.ScrollBarImageColor3 = Color3.fromRGB(50, 50, 50)
+    Page.Visible = false
+    Page.Parent = self.ContentFrame
+    tab.Page = Page
+
+    local PageLayout = Instance.new("UIListLayout")
+    PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    PageLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+    PageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    PageLayout.Padding = UDim.new(0, 8)
+    PageLayout.Parent = Page
+
+    -- Create Sidebar Button
+    local Btn = Instance.new("TextButton")
+    Btn.Name = name .. "TabBtn"
+    Btn.Size = UDim2.new(1, -12, 0, 40)
+    Btn.Position = UDim2.new(0, 6, 0, 0)
+    Btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    Btn.Text = "          " .. name
+    Btn.Font = Enum.Font.GothamMedium
+    Btn.TextSize = 13
+    Btn.TextColor3 = self.ThemeData.TextMuted
+    Btn.TextXAlignment = Enum.TextXAlignment.Left
+    Btn.Parent = self.TabContainer
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 8)
+    BtnCorner.Parent = Btn
+
+    if iconAssetId then
+        local Icon = Instance.new("ImageLabel")
+        Icon.Name = "Icon"
+        Icon.Size = UDim2.new(0, 18, 0, 18)
+        Icon.Position = UDim2.new(0, 12, 0.5, -9)
+        Icon.BackgroundTransparency = 1
+        Icon.Image = iconAssetId
+        Icon.ImageColor3 = self.ThemeData.TextMuted
+        Icon.Parent = Btn
+    end
+
+    Btn.MouseButton1Click:Connect(function()
+        self:SelectTab(name)
+    end)
+
+    self.Pages[name] = Page
+    self.TabButtons[name] = Btn
+
+    if not self.ActiveTab then
+        self:SelectTab(name)
+    end
+
+    setmetatable(tab, {__index = AreumUI})
+    return tab
+end
+
+function AreumUI:SelectTab(name)
+    self.ActiveTab = name
+    for pageName, pageFrame in pairs(self.Pages) do
+        pageFrame.Visible = (pageName == name)
+    end
+    for btnName, btn in pairs(self.TabButtons) do
+        local icon = btn:FindFirstChild("Icon")
+        if btnName == name then
+            btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+            btn.TextColor3 = self.ThemeData.Accent
+            if icon then icon.ImageColor3 = self.ThemeData.Accent end
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+            btn.TextColor3 = self.ThemeData.TextMuted
+            if icon then icon.ImageColor3 = self.ThemeData.TextMuted end
+        end
+    end
+end
+
+-- 3. Section Creation (CreateSection)
+function AreumUI:CreateSection(titleText)
+    local SectionLabel = Instance.new("TextLabel")
+    SectionLabel.Size = UDim2.new(1, -24, 0, 24)
+    SectionLabel.Position = UDim2.new(0, 6, 0, 0)
+    SectionLabel.BackgroundTransparency = 1
+    SectionLabel.Text = titleText:upper()
+    SectionLabel.Font = Enum.Font.GothamMedium
+    SectionLabel.TextSize = 10
+    SectionLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
+    SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SectionLabel.Parent = self.Page
+end
+
+-- 4. Component Creation (Toggle, Button, Dropdown)
+function AreumUI:CreateToggle(options)
+    options = options or {}
+    local name = options.Name or "Toggle"
+    local state = options.Default or false
+    local callback = options.Callback or function() end
+
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -24, 0, 50)
+    Row.BackgroundColor3 = self.Window.ThemeData.Row
+    Row.Parent = self.Page
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 8)
+    RowCorner.Parent = Row
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Thickness = 1
+    RowStroke.Color = self.Window.ThemeData.Stroke
+    RowStroke.Parent = Row
+
+    local RowText = Instance.new("TextLabel")
+    RowText.Size = UDim2.new(0.6, 0, 1, 0)
+    RowText.Position = UDim2.new(0, 14, 0, 0)
+    RowText.BackgroundTransparency = 1
+    RowText.Text = name
+    RowText.Font = Enum.Font.GothamMedium
+    RowText.TextSize = 13
+    RowText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    RowText.TextXAlignment = Enum.TextXAlignment.Left
+    RowText.Parent = Row
+
+    local SwitchBG = Instance.new("TextButton")
+    SwitchBG.Size = UDim2.new(0, 44, 0, 24)
+    SwitchBG.Position = UDim2.new(1, -14, 0.5, -12)
+    SwitchBG.AnchorPoint = Vector2.new(1, 0)
+    SwitchBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SwitchBG.Text = ""
+    SwitchBG.Parent = Row
+
+    local SwitchCorner = Instance.new("UICorner")
+    SwitchCorner.CornerRadius = UDim.new(1, 0)
+    SwitchCorner.Parent = SwitchBG
+
+    local SwitchBall = Instance.new("Frame")
+    SwitchBall.Size = UDim2.new(0, 18, 0, 18)
+    SwitchBall.Position = UDim2.new(0, 3, 0.5, -9)
+    SwitchBall.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+    SwitchBall.Parent = SwitchBG
+
+    local BallCorner = Instance.new("UICorner")
+    BallCorner.CornerRadius = UDim.new(1, 0)
+    BallCorner.Parent = SwitchBall
+
+    local function updateVisuals()
+        if state then
+            TweenService:Create(SwitchBall, TweenInfo.new(0.18), {Position = UDim2.new(1, -21, 0.5, -9), BackgroundColor3 = Color3.fromRGB(12, 12, 12)}):Play()
+            TweenService:Create(SwitchBG, TweenInfo.new(0.18), {BackgroundColor3 = self.Window.ThemeData.Accent}):Play()
+        else
+            TweenService:Create(SwitchBall, TweenInfo.new(0.18), {Position = UDim2.new(0, 3, 0.5, -9), BackgroundColor3 = Color3.fromRGB(180, 180, 180)}):Play()
+            TweenService:Create(SwitchBG, TweenInfo.new(0.18), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+        end
+    end
+
+    SwitchBG.MouseButton1Click:Connect(function()
+        state = not state
+        updateVisuals()
+        pcall(callback, state)
+    end)
+
+    updateVisuals()
+end
+
+function AreumUI:CreateButton(options)
+    options = options or {}
+    local name = options.Name or "Button"
+    local callback = options.Callback or function() end
+
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, -24, 0, 44)
+    Btn.BackgroundColor3 = Color3.fromRGB(24, 12, 12)
+    Btn.Text = name
+    Btn.Font = Enum.Font.GothamMedium
+    Btn.TextSize = 12
+    Btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    Btn.Parent = self.Page
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 8)
+    BtnCorner.Parent = Btn
+
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Thickness = 1
+    BtnStroke.Color = Color3.fromRGB(60, 25, 25)
+    BtnStroke.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+end
+
+function AreumUI:CreateDropdown(options)
+    options = options or {}
+    local name = options.Name or "Dropdown"
+    local items = options.Items or {}
+    local defaultItem = options.Default or items[1] or ""
+    local callback = options.Callback or function() end
+
+    local ThemeRow = Instance.new("Frame")
+    ThemeRow.Size = UDim2.new(1, -24, 0, 50)
+    ThemeRow.BackgroundColor3 = self.Window.ThemeData.Row
+    ThemeRow.ClipsDescendants = false
+    ThemeRow.ZIndex = 2
+    ThemeRow.Parent = self.Page
+
+    local ThemeRowCorner = Instance.new("UICorner")
+    ThemeRowCorner.CornerRadius = UDim.new(0, 8)
+    ThemeRowCorner.Parent = ThemeRow
+
+    local ThemeRowStroke = Instance.new("UIStroke")
+    ThemeRowStroke.Thickness = 1
+    ThemeRowStroke.Color = self.Window.ThemeData.Stroke
+    ThemeRowStroke.Parent = ThemeRow
+
+    local ThemeRowText = Instance.new("TextLabel")
+    ThemeRowText.Size = UDim2.new(0.6, 0, 1, 0)
+    ThemeRowText.Position = UDim2.new(0, 14, 0, 0)
+    ThemeRowText.BackgroundTransparency = 1
+    ThemeRowText.Text = name
+    ThemeRowText.Font = Enum.Font.GothamMedium
+    ThemeRowText.TextSize = 13
+    ThemeRowText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    ThemeRowText.TextXAlignment = Enum.TextXAlignment.Left
+    ThemeRowText.Parent = ThemeRow
+
+    local Badge = Instance.new("TextButton")
+    Badge.Size = UDim2.new(0, 100, 0, 26)
+    Badge.Position = UDim2.new(1, -14, 0.5, -13)
+    Badge.AnchorPoint = Vector2.new(1, 0)
+    Badge.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    Badge.Text = defaultItem .. " ▼"
+    Badge.Font = Enum.Font.GothamMedium
+    Badge.TextSize = 11
+    Badge.TextColor3 = Color3.fromRGB(210, 210, 210)
+    Badge.ZIndex = 3
+    Badge.Parent = ThemeRow
+
+    local BadgeCorner = Instance.new("UICorner")
+    BadgeCorner.CornerRadius = UDim.new(0, 6)
+    BadgeCorner.Parent = Badge
+
+    local DropdownList = Instance.new("ScrollingFrame")
+    DropdownList.Size = UDim2.new(0, 100, 0, 0)
+    DropdownList.Position = UDim2.new(1, -14, 0.5, 15)
+    DropdownList.AnchorPoint = Vector2.new(1, 0)
+    DropdownList.BackgroundColor3 = self.Window.ThemeData.Row
+    DropdownList.BorderSizePixel = 0
+    DropdownList.ScrollBarThickness = 0
+    DropdownList.ClipsDescendants = true
+    DropdownList.Visible = false
+    DropdownList.ZIndex = 50
+    DropdownList.Parent = ThemeRow
+
+    local DropdownCorner = Instance.new("UICorner")
+    DropdownCorner.CornerRadius = UDim.new(0, 8)
+    DropdownCorner.Parent = DropdownList
+
+    local DropdownLayout = Instance.new("UIListLayout")
+    DropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    DropdownLayout.Padding = UDim.new(0, 2)
+    DropdownLayout.Parent = DropdownList
+
+    local open = false
+    for idx, itemName in ipairs(items) do
+        local ItemBtn = Instance.new("TextButton")
+        ItemBtn.Size = UDim2.new(1, -4, 0, 30)
+        ItemBtn.BackgroundTransparency = 1
+        ItemBtn.Text = "  " .. itemName
+        ItemBtn.Font = Enum.Font.GothamMedium
+        ItemBtn.TextSize = 12
+        ItemBtn.TextColor3 = (defaultItem == itemName) and self.Window.ThemeData.Accent or Color3.fromRGB(160, 160, 160)
+        ItemBtn.TextXAlignment = Enum.TextXAlignment.Left
+        ItemBtn.LayoutOrder = idx
+        ItemBtn.ZIndex = 51
+        ItemBtn.Parent = DropdownList
+
+        ItemBtn.MouseButton1Click:Connect(function()
+            Badge.Text = itemName .. " ▼"
+            open = false
+            TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 100, 0, 0)}):Play()
+            task.wait(0.15)
+            DropdownList.Visible = false
+            pcall(callback, itemName)
+        end)
+    end
+
+    Badge.MouseButton1Click:Connect(function()
+        open = not open
+        if open then
+            DropdownList.Visible = true
+            Badge.Text = defaultItem .. " ▲"
+            TweenService:Create(DropdownList, TweenInfo.new(0.2), {Size = UDim2.new(0, 100, 0, #items * 32)}):Play()
+        else
+            Badge.Text = defaultItem .. " ▼"
+            local tw = TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 100, 0, 0)})
+            tw:Play()
+            tw.Completed:Connect(function()
+                if not open then DropdownList.Visible = false end
+            end)
+        end
+    end)
+end
+
+function AreumUI:Destroy()
+    for _, conn in ipairs(self.Connections) do
+        conn:Disconnect()
+    end
+    if self.ScreenGui then
+        self.ScreenGui:Destroy()
+    end
+end
+
+return AreumUI
