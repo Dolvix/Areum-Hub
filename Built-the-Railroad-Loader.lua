@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.371.3 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.372.6 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -296,20 +296,15 @@ local function getLogs()
     -- Fixed timeout window from 0.1 to 2.5 seconds to ensure logs are fully collected
     local startTime = os.clock()
     repeat
-        if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
-            keypress(0x45)
-            task.wait(0.05)
-            keyrelease(0x45)
-        else
             fireproximityprompt(prox_collect_logs)
-        end
-        task.wait(0.1)
+            task.wait(0.1)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
     forceAnchor(true)
     task.wait(0.1)
 end
 
+-- Main Automation Loop
 -- Main Automation Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.01) do
@@ -337,20 +332,22 @@ task.spawn(function()
                     forceAnchor(true) 
                 end
 
+                -- Optimized: Press E down once instead of spamming keypress/keyrelease every frame
+                if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
+                    keypress(0x45)
+                end
+
                 local startTime = os.clock()
-                
                 repeat 
-                    if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
-                        keypress(0x45)
-                        task.wait()
-                        keyrelease(0x45)
-                    end
-                    task.wait()
-                    
+                    task.wait(0.05)
                     local timePassed = os.clock() - startTime
-                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.4 or game_state:GetAttribute("Phase") ~= "Build"
+                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.8 or game_state:GetAttribute("Phase") ~= "Build"
                 
-                pcall(function() keyrelease(0x45) end)
+                -- Release E once building/drop-off is done
+                if typeof(keyrelease) == "function" then
+                    keyrelease(0x45)
+                end
+                
                 forceAnchor(true)
             end
         else
