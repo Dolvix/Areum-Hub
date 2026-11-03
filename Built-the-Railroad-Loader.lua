@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-local version = "2.471.6"
+local version = "2.471.7"
 print(`[ Loader Version: v{version} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -104,7 +104,7 @@ env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
 local useless_local = false
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
-local DataLibraryLink = ""
+local DataLibraryLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-Data-Configs.lua"
 
 -- Mobile Floating Button Management
 local mobileButtonGui = nil

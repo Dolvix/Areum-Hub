@@ -4,7 +4,7 @@ Data.Staff = {}
 Data.Loaders = {}
 
 Data.Loaders["BTRLoader"] = {
-    version = "2.471.6",
+    version = "2.471.7",
     state = "working",
     load = function()
         local result, err = pcall(function()
