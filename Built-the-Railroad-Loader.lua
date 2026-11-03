@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.374.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.376.5 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -361,7 +361,10 @@ task.spawn(function()
             if hrp then
                 forceAnchor(false)
             end
-            hrp.Position = seat.Position + Vector3.new(2, 2, 0)
+            hrp.Position = seat.Position + Vector3.new(0, 2, 2)
+
+            character.Humanoid.Jump = true
+
         end
 
         if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
@@ -371,7 +374,7 @@ task.spawn(function()
             for _, lootspot in pairs(loot_fldr:GetChildren()) do
                 if hrp then
                     hrp.Position = lootspot.Position + Vector3.new(0, 2, 0)
-                    task.wait(0.25)
+                    task.wait(0.1)
                 end
             end
         end
