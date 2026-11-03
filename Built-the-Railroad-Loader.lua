@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.471.9"
+local Lversion = "2.472.1"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -102,6 +102,7 @@ env.AUHANDCARTSPEED = ConfigManager.Data.AUHandcartSpeed
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
 
 local useless_local = false
+local update_shown = false
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 local DataLibraryLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-Data-Configs.lua"
@@ -394,6 +395,9 @@ task.spawn(function()
         end
 
         onupdate = function(newver: string)
+            if update_shown then return end
+
+            update_shown = true
             local UpdateTab = Window:CreateTab("Update!", "rbxassetid://4869184613")
 
             UpdateTab:CreateSection("Update News ://")
