@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.448.1 [TEST-VERSION] | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.448.2 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -554,7 +554,7 @@ task.spawn(function()
                 if bridge_newest_position and hrp and logAmount > 0 and env.SCRIPT_ACTIVE then
                     forceAnchor(false)
                     task.wait()
-                    --hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
+                    hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
                     task.wait()
 
                     local startTime = os.clock()
