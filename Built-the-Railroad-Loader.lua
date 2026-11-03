@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.401.2 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.401.3 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -297,7 +297,7 @@ end
 local function getLogs()
     if not hrp or not env.SCRIPT_ACTIVE then return end
     
-    forceAnchor(false)s
+    forceAnchor(false)
     task.wait()
     hrp.Position = logs.Position + Vector3.new(0, 3, 0)
     task.wait()
@@ -406,9 +406,6 @@ task.spawn(function()
                     end
                 end
             end
-        end
-
-
     end
 end)
 
