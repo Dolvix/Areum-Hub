@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.446.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.448.1 [TEST-VERSION] | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -361,7 +361,7 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateSection("Debug Library")
+        ConfigTab:CreateSection("Debug Library ://")
         ConfigTab:CreateButton({
             Name = "Kill Loader (F1)",
             Callback = function()
@@ -554,24 +554,15 @@ task.spawn(function()
                 if bridge_newest_position and hrp and logAmount > 0 and env.SCRIPT_ACTIVE then
                     forceAnchor(false)
                     task.wait()
-                    hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
+                    --hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
                     task.wait()
-                    
-                    if device_supported and typeof(keypress) == "function" then
-                        keypress(0x45)
-                    end
 
                     local startTime = os.clock()
                     repeat 
                         task.wait(0.05)
-                        if not device_supported then 
-                            pcall(function() build_remote:FireServer() end)
-                        end
+                        pcall(function() build_remote:FireServer() end)
                     until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.8
                     
-                    if device_supported and typeof(keyrelease) == "function" then
-                        keyrelease(0x45)
-                    end
                 end
             end
         else
