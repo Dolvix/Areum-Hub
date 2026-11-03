@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.448.2 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.448.3 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -509,11 +509,10 @@ local function getLogs()
     repeat
         pcall(function() fireproximityprompt(prox_collect_logs) end)
         hrp.Position = logs.Position + Vector3.new(0, 3, 0)
-        task.wait(0.1)
+        task.wait(0.025)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
     forceAnchor(false)
-    task.wait(0.1)
 end
 
 -- Main Automation Loop
@@ -559,7 +558,7 @@ task.spawn(function()
 
                     local startTime = os.clock()
                     repeat 
-                        task.wait(0.05)
+                        task.wait(0.01)
                         pcall(function() build_remote:FireServer() end)
                     until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.8
                     
