@@ -130,14 +130,14 @@ function AreumUI:CreateWindow(config)
     TitleLabel.Position = UDim2.new(0, 16, 0, 10)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.RichText = true
-    TitleLabel.Font = Enum.Font.Gotham
-    TitleLabel.TextSize = 22
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 24
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Sidebar
 
     local r, g, b = math.floor(window.ThemeData.Accent.R * 255), math.floor(window.ThemeData.Accent.G * 255), math.floor(window.ThemeData.Accent.B * 255)
-    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)" size="13">Hub</font>]], r, g, b)
+    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)" size="15">Hub</font>]], r, g, b)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
@@ -206,7 +206,7 @@ function AreumUI:CreateTab(name, iconAssetId)
     Btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
     Btn.Text = "          " .. name
     Btn.Font = Enum.Font.GothamMedium
-    Btn.TextSize = 13
+    Btn.TextSize = 16
     Btn.TextColor3 = self.ThemeData.TextMuted
     Btn.TextXAlignment = Enum.TextXAlignment.Left
     Btn.Parent = self.TabContainer
@@ -268,7 +268,7 @@ function AreumUI:CreateSection(titleText)
     SectionLabel.BackgroundTransparency = 1
     SectionLabel.Text = titleText:upper()
     SectionLabel.Font = Enum.Font.GothamMedium
-    SectionLabel.TextSize = 10
+    SectionLabel.TextSize = 13
     SectionLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
     SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
     SectionLabel.Parent = self.Page
