@@ -1,8 +1,8 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-local version = "2.471.8"
-print(`[ Loader Version: v{version} | Supports UI Library Versions From 2.000.0 ]`)
+local Lversion = "2.471.9"
+print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
 
@@ -570,9 +570,12 @@ end
 task.spawn(function()
 
     while task.wait(30) do
-        local GitHub_Version = loadstring(game:HttpGet(DataLibraryLink))()
-        if GitHub_Version.Loaders.BTRLoader.version ~= version then
-            onupdate(GitHub_Version.Loaders.BTRLoader.version)
+        if env.FETCHVERSIONS then
+            local GitHub_Version = loadstring(game:HttpGet(DataLibraryLink))()
+            print(`[Areum Hub]: Loader Version: v{Lversion} | GitHub Version: v{GitHub_Version.Loaders.BTRLoader.Lversion}`)
+            if GitHub_Version.Loaders.BTRLoader.version ~= version then
+                onupdate(GitHub_Version.Loaders.BTRLoader.version)
+            end
         end
     end
     
