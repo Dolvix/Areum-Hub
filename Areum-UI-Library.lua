@@ -1,4 +1,6 @@
--- Universal AreumUI Library Module
+-- =========================================================================
+-- AREUM UI LIBRARY (Universal Modular Edition)
+-- =========================================================================
 local AreumUI = {}
 AreumUI.__index = AreumUI
 
@@ -58,6 +60,7 @@ function AreumUI:CreateWindow(config)
     ScreenGui.Name = "AreumHub_Universal"
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    ScreenGui.ClipToDeviceSafeArea = false
     ScreenGui.IgnoreGuiInset = true
     ScreenGui.DisplayOrder = 9999999
     ScreenGui.Parent = targetParent
