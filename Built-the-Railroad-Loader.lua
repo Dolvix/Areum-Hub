@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.371.2 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.371.3 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -26,7 +26,9 @@ local ConfigManager = {
         CurrentTheme = "Violet",
         ToggleKey = "LeftControl",
         AutoFarm = false,
-        RainbowHighlight = false
+        RainbowHighlight = false,
+        TrainTp = false,
+        CollectLoot = false
     }
 }
 
@@ -181,8 +183,6 @@ local train = workspace.World.Train
 local seat = train.Carriage2:FindFirstChild("Seat")
 
 local game_state = game:GetService("ReplicatedStorage").GameState
--- Phase: Ride
--- Phase: Building
 
 -- Rainbow Visual Effects Setup
 local function createRainbowVisuals(char)
@@ -286,14 +286,14 @@ local function getLogs()
     
     forceAnchor(false)
     task.wait()
-    hrp.Position = ( logs.Position + Vector3.new(0,3,0))
+    hrp.Position = logs.Position + Vector3.new(0, 3, 0)
     task.wait()
     
     if env.AUTO_FARM and env.SCRIPT_ACTIVE then 
         forceAnchor(true)
     end
     
-    -- Keep firing and waiting until CarryStack actually registers the logs or farm turns off
+    -- Fixed timeout window from 0.1 to 2.5 seconds to ensure logs are fully collected
     local startTime = os.clock()
     repeat
         if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
@@ -304,10 +304,10 @@ local function getLogs()
             fireproximityprompt(prox_collect_logs)
         end
         task.wait(0.1)
-    until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.1
+    until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
     forceAnchor(true)
-    task.wait(0.1) -- Brief pause to ensure stable state transition
+    task.wait(0.1)
 end
 
 -- Main Automation Loop
@@ -317,6 +317,7 @@ task.spawn(function()
             local logAmount = getLogAmount()
             if logAmount <= 0 then
                 getLogs()
+                logAmount = getLogAmount() -- Refresh count after fetching
             end
 
             if not bridge_newest_position and env.SCRIPT_ACTIVE then
@@ -326,7 +327,7 @@ task.spawn(function()
                 repeat task.wait(0.02) until bridge_newest_position or not env.AUTO_FARM or not env.SCRIPT_ACTIVE
             end
 
-            if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount() > 0 then
+            if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount > 0 then
                 forceAnchor(false)
                 task.wait()
                 hrp.CFrame = bridge_newest_position
@@ -347,7 +348,7 @@ task.spawn(function()
                     task.wait()
                     
                     local timePassed = os.clock() - startTime
-                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.4 or not game_state:GetAttribute("Phase") == "Build"
+                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.4 or game_state:GetAttribute("Phase") ~= "Build"
                 
                 pcall(function() keyrelease(0x45) end)
                 forceAnchor(true)
@@ -359,26 +360,22 @@ task.spawn(function()
         end
 
         if env.TRAIN_TP and game_state:GetAttribute("Phase") == "Ride" then
-
             if hrp then
                 forceAnchor(false)
             end
-
-            hrp.Positition = (seat.Position + Vector3.new(0,2,0))
-
+            hrp.Position = seat.Position + Vector3.new(0, 2, 0)
         end
 
         if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
-
             if hrp then
                 forceAnchor(true)
             end
-
-            for _, lootspot in pairs(loot_fldr:GetChildren())
-                hrp.Positition = (lootspot.Position + Vector3.new(0,1,0))
-                task.wait(0.25)
+            for _, lootspot in pairs(loot_fldr:GetChildren()) do
+                if hrp then
+                    hrp.Position = lootspot.Position + Vector3.new(0, 1, 0)
+                    task.wait(0.25)
+                end
             end
-
         end
     end
 end)
