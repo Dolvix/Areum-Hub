@@ -1,5 +1,5 @@
 -- =========================================================================
--- AREUM HUB LOADER (Version: 2.2.0 - Build the Railroad Loader)
+-- AREUM HUB LOADER (Version: 2.2.0 - Universal Modular Edition with Config)
 -- =========================================================================
 print("[Areum Hub Loader v2.2.0] Initialized successfully. Loading environment...")
 
@@ -66,7 +66,6 @@ env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.L
 env.STOP_KEY = Enum.KeyCode.F1
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 
--- UI Module Link (Make sure this points to your raw GitHub UI Library file)
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
 -- Load Universal UI Module asynchronously
@@ -80,6 +79,7 @@ task.spawn(function()
             Theme = env.CURRENT_THEME,
             ToggleKey = env.UI_TOGGLE_KEY
         })
+        env.AreumUI = Window -- Store reference for cleanup/reloading
 
         local MainTab = Window:CreateTab("Main", "rbxassetid://140076833387955")
         local ConfigTab = Window:CreateTab("Config", "rbxassetid://18397244060")
@@ -106,9 +106,17 @@ task.spawn(function()
                 env.CURRENT_THEME = selectedTheme
                 ConfigManager.Data.CurrentTheme = selectedTheme
                 ConfigManager:Save()
+                
                 if typeof(env.CloseAreumHub) == "function" then
                     env.CloseAreumHub()
                 end
+                
+                -- Re-launch loader to apply new theme cleanly
+                task.spawn(function()
+                    pcall(function()
+                        loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Built-the-Railroad-Loader.lua"))()
+                    end)
+                end)
             end
         })
 
