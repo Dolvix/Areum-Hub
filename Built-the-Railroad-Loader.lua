@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM HUB LOADER (Built the Railroad Loader.)
+-- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.402.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.405.1 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -17,7 +17,7 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
 -- =========================================================================
--- CONFIGURATION MANAGER (JSON Workspace Saving)
+-- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
 -- =========================================================================
 local CONFIG_FILE = "AreumHub_Config.json"
 
@@ -30,35 +30,45 @@ local ConfigManager = {
         TrainTp = false,
         CollectLoot = false,
         AutoFix = false,
+        MobileButton = false,
     }
 }
 
 function ConfigManager:Load()
-    if isfile and isfile(CONFIG_FILE) then
-        local success, decoded = pcall(function()
-            return HttpService:JSONDecode(readfile(CONFIG_FILE))
-        end)
-        if success and type(decoded) == "table" then
-            print("[Areum Hub] Configuration loaded successfully from workspace.")
-            for k, v in pairs(decoded) do
-                ConfigManager.Data[k] = v
+    pcall(function()
+        if type(isfile) == "function" and type(readfile) == "function" then
+            if isfile(CONFIG_FILE) then
+                local success, content = pcall(readfile, CONFIG_FILE)
+                if success and type(content) == "string" then
+                    local successDecode, decoded = pcall(function()
+                        return HttpService:JSONDecode(content)
+                    end)
+                    if successDecode and type(decoded) == "table" then
+                        print("[Areum Hub] Configuration loaded successfully from workspace.")
+                        for k, v in pairs(decoded) do
+                            ConfigManager.Data[k] = v
+                        end
+                    end
+                end
             end
         end
-    end
+    end)
 end
 
 function ConfigManager:Save()
-    local success, encoded = pcall(function()
-        return HttpService:JSONEncode(self.Data)
+    pcall(function()
+        if type(writefile) == "function" then
+            local successEncode, encoded = pcall(function()
+                return HttpService:JSONEncode(self.Data)
+            end)
+            if successEncode and type(encoded) == "string" then
+                writefile(CONFIG_FILE, encoded)
+            end
+        end
     end)
-    if success and writefile then
-        pcall(function()
-            writefile(CONFIG_FILE, encoded)
-        end)
-    end
 end
 
--- Load config data on startup
+-- Load config data safely on startup
 ConfigManager:Load()
 
 -- Environment Configuration Defaults (Synced with ConfigManager data)
@@ -71,21 +81,113 @@ env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.TRAIN_TP = ConfigManager.Data.TrainTp
 env.COLLECT_LOOT = ConfigManager.Data.CollectLoot
 env.AUTO_FIX = ConfigManager.Data.AutoFix
+env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
+
+-- Mobile Floating Button Management
+local mobileButtonGui = nil
+
+local function setupMobileButton(enabled)
+    if enabled then
+        if mobileButtonGui then return end
+        
+        local coreGui = nil
+        pcall(function() coreGui = game:GetService("CoreGui") end)
+        local parentTarget = coreGui or player:WaitForChild("PlayerGui")
+        
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "AreumHub_MobileButton"
+        screenGui.ResetOnSpawn = false
+        
+        pcall(function()
+            if syn and syn.protect_gui then
+                syn.protect_gui(screenGui)
+                screenGui.Parent = coreGui
+            elseif protectgui then
+                protectgui(screenGui)
+                screenGui.Parent = coreGui
+            else
+                screenGui.Parent = parentTarget
+            end
+        end)
+        if not screenGui.Parent then
+            screenGui.Parent = parentTarget
+        end
+        
+        local btn = Instance.new("ImageButton")
+        btn.Name = "ToggleBtn"
+        btn.Size = UDim2.new(0, 45, 0, 45)
+        btn.Position = UDim2.new(0, 30, 0, 200)
+        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        btn.BorderColor3 = Color3.fromRGB(60, 60, 80)
+        btn.BorderSizePixel = 1
+        btn.Image = "rbxassetid://18397244060" -- Config tab icon
+        btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Parent = screenGui
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = btn
+        
+        -- Draggable functionality for mobile convenience
+        local dragging, dragInput, dragStart, startPos
+        btn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = btn.Position
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
+            end
+        end)
+        
+        btn.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                dragInput = input
+            end
+        end)
+        
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                btn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        
+        -- Tap / Click to toggle menu visibility
+        btn.MouseButton1Click:Connect(function()
+            if env.AreumUI then
+                pcall(function()
+                    env.AreumUI:Toggle()
+                end)
+            end
+        end)
+        
+        mobileButtonGui = screenGui
+    else
+        if mobileButtonGui then
+            mobileButtonGui:Destroy()
+            mobileButtonGui = nil
+        end
+    end
+end
 
 -- Load Universal UI Module asynchronously
 task.spawn(function()
     local success, err = pcall(function()
         local AreumUI = loadstring(game:HttpGet(UIModuleLink))()
         
-        -- Initialize Universal Window & Tabs using the modular API
         local Window = AreumUI:CreateWindow({
             Title = "Areum Hub",
             Theme = env.CURRENT_THEME,
             ToggleKey = env.UI_TOGGLE_KEY
         })
-        env.AreumUI = Window -- Store reference for cleanup/reloading
+        env.AreumUI = Window
 
         local MainTab = Window:CreateTab("Main", "rbxassetid://140076833387955")
         local ConfigTab = Window:CreateTab("Config", "rbxassetid://18397244060")
@@ -147,7 +249,6 @@ task.spawn(function()
                     env.CloseAreumHub()
                 end
                 
-                -- Re-launch loader to apply new theme cleanly
                 task.spawn(function()
                     pcall(function()
                         loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Built-the-Railroad-Loader.lua"))()
@@ -166,6 +267,18 @@ task.spawn(function()
             end
         })
 
+        ConfigTab:CreateSection("Mobile / Layout Options //")
+        ConfigTab:CreateToggle({
+            Name = "Mobile Button",
+            Default = env.MOBILE_BUTTON,
+            Callback = function(state)
+                env.MOBILE_BUTTON = state
+                ConfigManager.Data.MobileButton = state
+                ConfigManager:Save()
+                setupMobileButton(state)
+            end
+        })
+
         ConfigTab:CreateSection("Debug Library")
         ConfigTab:CreateButton({
             Name = "Kill Loader (F1)",
@@ -175,6 +288,10 @@ task.spawn(function()
                 end
             end
         })
+
+        if env.MOBILE_BUTTON then
+            setupMobileButton(true)
+        end
     end)
     
     if not success then
@@ -187,7 +304,7 @@ local logs = workspace:WaitForChild("World"):WaitForChild("Yard"):WaitForChild("
 local prox_collect_logs = logs:WaitForChild("ProximityPrompt")
 local loot_fldr = workspace.World.Town.LootSpots
 local repair_jobs_fldr = workspace.RepairJobs
-local mobile_button = player.PlayerGui.BridgeTouch.Action
+local build_remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Place")
 
 local bridge_newest_position = nil
 local character = player.Character or player.CharacterAdded:Wait()
@@ -197,13 +314,7 @@ local train = workspace.World.Train
 local seat = train.Carriage2:FindFirstChild("Seat")
 
 local game_state = game:GetService("ReplicatedStorage").GameState
-local device_supported = nil
-
-if UserInputService.KeyboardEnabled then
-        device_supported = true
-    else 
-        device_supported = false
-end
+local device_supported = UserInputService.KeyboardEnabled
 
 -- Rainbow Visual Effects Setup
 local function createRainbowVisuals(char)
@@ -312,7 +423,7 @@ local function getLogs()
     
     local startTime = os.clock()
     repeat
-        fireproximityprompt(prox_collect_logs)
+        pcall(function() fireproximityprompt(prox_collect_logs) end)
         hrp.Position = logs.Position + Vector3.new(0, 3, 0)
         task.wait(0.1)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
@@ -342,7 +453,6 @@ task.spawn(function()
         -- AUTO FARM MONEY / LOGS
         if env.AUTO_FARM then
             local currentPhase = game_state:GetAttribute("Phase")
-            -- Fallback if phase attribute is missing or matches Build
             if not currentPhase or currentPhase == "Build" then
                 local logAmount = getLogAmount()
                 
@@ -351,29 +461,26 @@ task.spawn(function()
                     logAmount = getLogAmount()
                 end
 
-                -- Non-blocking check for bridge position so it never freezes execution
                 if bridge_newest_position and hrp and logAmount > 0 and env.SCRIPT_ACTIVE then
                     forceAnchor(false)
                     task.wait()
                     hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
                     task.wait()
                     
-                    if device_supported then
-                        if typeof(keypress) == "function" then
-                            keypress(0x45)
-                        end
+                    if device_supported and typeof(keypress) == "function" then
+                        keypress(0x45)
                     end
 
                     local startTime = os.clock()
                     repeat 
                         task.wait(0.05)
-                        if not device_supported then mobile_button:Active() end
+                        if not device_supported then 
+                            pcall(function() build_remote:FireServer() end)
+                        end
                     until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.8
                     
-                    if device_supported then
-                        if typeof(keyrelease) == "function" then
-                            keyrelease(0x45)
-                        end
+                    if device_supported and typeof(keyrelease) == "function" then
+                        keyrelease(0x45)
                     end
                 end
             end
@@ -420,8 +527,14 @@ local function closeScriptRoutine()
     env.TRAIN_TP = false
     env.COLLECT_LOOT = false
     env.AUTO_FIX = false
+    env.MOBILE_BUTTON = false
     
-    pcall(function() keyrelease(0x45) end)
+    setupMobileButton(false)
+
+    if device_supported then
+        pcall(function() keyrelease(0x45) end)
+    end
+
     if hrp then forceAnchor(false) end
     if trail then trail:Destroy() end
     if highlight then highlight:Destroy() end

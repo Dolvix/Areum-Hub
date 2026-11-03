@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Universal Modular Edition)
 -- =========================================================================
-print("[ UI Library Version: 2.032.1 | Supports Loader Versions From 2.000.0 ]")
+print("[ UI Library Version: 2.032.2 | Supports Loader Versions From 2.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -54,8 +54,13 @@ function AreumUI:CreateWindow(config)
     window.ActiveTab = nil
     window.Connections = {}
 
-    -- Parent target handling
-    local targetParent = typeof(gethui) == "function" and gethui() or CoreGui
+    -- Parent target handling with safe fallback
+    local targetParent = CoreGui
+    pcall(function()
+        if typeof(gethui) == "function" then
+            targetParent = gethui()
+        end
+    end)
 
     -- ScreenGui Setup
     local ScreenGui = Instance.new("ScreenGui")
@@ -88,7 +93,7 @@ function AreumUI:CreateWindow(config)
     MainStroke.Color = window.ThemeData.Stroke
     MainStroke.Parent = MainFrame
 
-    -- Custom Smooth Dragging
+    -- Custom Smooth Dragging (Supports Touch & Mouse)
     local dragging, dragInput, dragStart, startPos
     MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -133,13 +138,13 @@ function AreumUI:CreateWindow(config)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.RichText = true
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 24
+    TitleLabel.TextSize = 22
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Sidebar
 
     local r, g, b = math.floor(window.ThemeData.Accent.R * 255), math.floor(window.ThemeData.Accent.G * 255), math.floor(window.ThemeData.Accent.B * 255)
-    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font><font color="rgb(255,255,255)" size="16">Hub</font>]], r, g, b)
+    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)" size="16">Hub</font>]], r, g, b)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
@@ -175,13 +180,19 @@ function AreumUI:CreateWindow(config)
     return window
 end
 
+-- Toggle visibility programmatically for mobile floating buttons
+function AreumUI:Toggle()
+    if self.MainFrame then
+        self.MainFrame.Visible = not self.MainFrame.Visible
+    end
+end
+
 -- 2. Tab Creation (CreateTab)
 function AreumUI:CreateTab(name, iconAssetId)
     local tab = {}
     tab.Window = self
     tab.Name = name
 
-    -- Create Page Container
     local Page = Instance.new("ScrollingFrame")
     Page.Name = name .. "Page"
     Page.Size = UDim2.new(1, 0, 1, 0)
@@ -200,7 +211,6 @@ function AreumUI:CreateTab(name, iconAssetId)
     PageLayout.Padding = UDim.new(0, 8)
     PageLayout.Parent = Page
 
-    -- Create Sidebar Button
     local Btn = Instance.new("TextButton")
     Btn.Name = name .. "TabBtn"
     Btn.Size = UDim2.new(1, -12, 0, 40)
