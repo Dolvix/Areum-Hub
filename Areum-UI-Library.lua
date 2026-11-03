@@ -136,7 +136,7 @@ function AreumUI:CreateWindow(config)
     TitleLabel.Parent = Sidebar
 
     local r, g, b = math.floor(window.ThemeData.Accent.R * 255), math.floor(window.ThemeData.Accent.G * 255), math.floor(window.ThemeData.Accent.B * 255)
-    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)" size="14">Hub</font>]], r, g, b)
+    TitleLabel.Text = string.format([[<font color="rgb(%d,%d,%d)"><b>Areum</b></font> <font color="rgb(255,255,255)" size="23">Hub</font>]], r, g, b)
 
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Name = "TabContainer"
