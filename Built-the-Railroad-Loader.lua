@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.203.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.204.7 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -255,6 +255,7 @@ local function getLogs()
     if not hrp or not env.SCRIPT_ACTIVE then return end
     
     forceAnchor(false)
+    task.wait()
     hrp.CFrame = logs.CFrame
     task.wait()
     
@@ -262,14 +263,21 @@ local function getLogs()
         forceAnchor(true)
     end
     
+    -- Keep firing and waiting until CarryStack actually registers the logs or farm turns off
+    local startTime = os.clock()
     repeat
-        fireproximityprompt(prox_collect_logs)
-        task.wait()
-    until getLogAmount ~= 0 or env.AUTO_FARM or not env.SCRIPT_ACTIVE
+        if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
+            keypress(0x45)
+            task.wait(0.05)
+            keyrelease(0x45)
+        else
+            fireproximityprompt(prox_collect_logs)
+        end
+        task.wait(0.1)
+    until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.5
     
     forceAnchor(true)
-
-    return true
+    task.wait(0.1) -- Brief pause to ensure stable state transition
 end
 
 -- Main Automation Loop
