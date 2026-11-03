@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.406.6 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.445.9 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -33,6 +33,11 @@ local ConfigManager = {
         AutoFix = false,
         MobileButton = false,
         Disable3DRendering = false,
+        AUCarry = false,
+        AUSpeed = false,
+        AUBulkPlace = false,
+        AUReach = false,
+        AUHandcartSpeed = false,
     }
 }
 
@@ -85,6 +90,12 @@ env.COLLECT_LOOT = ConfigManager.Data.CollectLoot
 env.AUTO_FIX = ConfigManager.Data.AutoFix
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.DISABLE3DRENDERING = ConfigManager.Data.Disable3DRendering
+
+env.AUCARRY = ConfigManager.Data.AUCarry
+env.AUSPEED = ConfigManager.Data.AUSpeed
+env.AUBULKPLACE = ConfigManager.Data.AUBulkPlace
+env.AUREACH = ConfigManager.Data.AUReach
+env.AUHANDCARTSPEED = ConfigManager.Data.AUHandcartSpeed
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
@@ -192,12 +203,13 @@ task.spawn(function()
         })
         env.AreumUI = Window
 
-        local MainTab = Window:CreateTab("Main", "rbxassetid://140076833387955")
-        local ConfigTab = Window:CreateTab("Config", "rbxassetid://18397244060")
+        local FarmTab = Window:CreateTab("Farming", "rbxassetid://13353741942")
+        local UpgradesTab = Window:CreateTab("Upgrades", "rbxassetid://7246622296")
+        local ConfigTab = Window:CreateTab("Settings", "rbxassetid://18397244060")
 
         -- Main Tab Controls
-        MainTab:CreateSection("Auto Progress Options ://")
-        MainTab:CreateToggle({
+        FarmTab:CreateSection("Auto Progress Options ://")
+        FarmTab:CreateToggle({
             Name = "Farm Money",
             Default = env.AUTO_FARM,
             Callback = function(state)
@@ -207,7 +219,7 @@ task.spawn(function()
             end
         })
 
-        MainTab:CreateToggle({
+        FarmTab:CreateToggle({
             Name = "Auto Ride Train",
             Default = env.TRAIN_TP,
             Callback = function(state)
@@ -217,7 +229,7 @@ task.spawn(function()
             end
         })
 
-        MainTab:CreateToggle({
+        FarmTab:CreateToggle({
             Name = "Auto Collect Loot",
             Default = env.COLLECT_LOOT,
             Callback = function(state)
@@ -227,12 +239,65 @@ task.spawn(function()
             end
         })
 
-        MainTab:CreateToggle({
+        FarmTab:CreateToggle({
             Name = "Auto Fix Bridge",
             Default = env.AUTO_FIX,
             Callback = function(state)
                 env.AUTO_FIX = state
                 ConfigManager.Data.AutoFix = state
+                ConfigManager:Save()
+            end
+        })
+
+        -- Upgrades Tab Controls
+        UpgradesTab:CreateSection("Auto Upgrades ://")
+
+        ConfigTab:CreateToggle({
+            Name = "Auto Upgrade Carry",
+            Default = env.AUCARRY,
+            Callback = function(state)
+                env.AUCARRY = state
+                ConfigManager.Data.AUCarry = state
+                ConfigManager:Save()
+            end
+        })
+
+        ConfigTab:CreateToggle({
+            Name = "Auto Upgrade Speed",
+            Default = env.AUSPEED,
+            Callback = function(state)
+                env.AUSPEED = state
+                ConfigManager.Data.AUSpeed = state
+                ConfigManager:Save()
+            end
+        })
+
+        ConfigTab:CreateToggle({
+            Name = "Auto Upgrade Bulk Place",
+            Default = env.AUBULKPLACE,
+            Callback = function(state)
+                env.AUBULKPLACE = state
+                ConfigManager.Data.AUBulkPlace = state
+                ConfigManager:Save()
+            end
+        })
+
+        ConfigTab:CreateToggle({
+            Name = "Auto Upgrade Reach",
+            Default = env.AUREACH,
+            Callback = function(state)
+                env.AUREACH = state
+                ConfigManager.Data.AUReach = state
+                ConfigManager:Save()
+            end
+        })
+
+        ConfigTab:CreateToggle({
+            Name = "Auto Upgrade Handcart Speed",
+            Default = env.AUHANDCARTSPEED,
+            Callback = function(state)
+                env.AUHANDCARTSPEED = state
+                ConfigManager.Data.AUHandcartSpeed = state
                 ConfigManager:Save()
             end
         })
@@ -273,7 +338,7 @@ task.spawn(function()
         ConfigTab:CreateSection("Rendering ://")
 
         ConfigTab:CreateToggle({
-            Name = "3D Rendering",
+            Name = "Disable 3D Rendering",
             Default = env.DISABLE3DRENDERING,
             Callback = function(state)
                 env.DISABLE3DRENDERING = state
@@ -321,7 +386,9 @@ local logs = workspace:WaitForChild("World"):WaitForChild("Yard"):WaitForChild("
 local prox_collect_logs = logs:WaitForChild("ProximityPrompt")
 local loot_fldr = workspace.World.Town.LootSpots
 local repair_jobs_fldr = workspace.RepairJobs
+
 local build_remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Place")
+local upgrade_remote = game:GetService("ReplicatedStorage").Remotes.BuyUpgrade
 
 local bridge_newest_position = nil
 local character = player.Character or player.CharacterAdded:Wait()
@@ -538,6 +605,38 @@ task.spawn(function()
                 end
             end
         end
+
+        -- AUTO UPGRADE
+        if env.AUCARRY and env.SCRIPT_ACTIVE then
+            upgrade_remote:InvokeServer(
+                "Carry"
+            )
+        end
+
+        if env.AUSPEED and env.SCRIPT_ACTIVE then
+            upgrade_remote:InvokeServer(
+                "Speed"
+            )
+        end
+
+        if env.AUBULKPLACE and env.SCRIPT_ACTIVE then
+            upgrade_remote:InvokeServer(
+                "BulkPlace"
+            )
+        end
+
+        if env.AUREACH and env.SCRIPT_ACTIVE then
+            upgrade_remote:InvokeServer(
+                "Reach"
+            )
+        end
+
+        if env.AUHANDCARTSPEED and env.SCRIPT_ACTIVE then
+            upgrade_remote:InvokeServer(
+                "CartSpeed"
+            )
+        end
+
     end
 end)
 
@@ -552,6 +651,11 @@ local function closeScriptRoutine()
     env.AUTO_FIX = false
     env.MOBILE_BUTTON = false
     env.DISABLE3DRENDERING = false
+    env.AUCARRY = false
+    env.AUSPEED = false
+    env.AUBULKPLACE = false
+    env.AUREACH = false
+    env.AUHANDCARTSPEED = false
     
     setupMobileButton(false)
 
