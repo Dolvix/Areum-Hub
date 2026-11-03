@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM HUB LOADER (Version: 2.1.0 - Build the Railroad Loader)
+-- AREUM HUB LOADER (Version: 2.2.0 - Build the Railroad Loader)
 -- =========================================================================
-print("[Areum Hub Loader v2.1.0] Initialized successfully. Loading environment...")
+print("[Areum Hub Loader v2.2.0] Initialized successfully. Loading environment...")
 
 local env = getfenv(0)
 
@@ -11,27 +11,70 @@ if env.AreumHubExecuted == true then
 end
 env.AreumHubExecuted = true
 
--- Environment Configuration Defaults
-env.AUTO_FARM = env.AUTO_FARM or false
-env.RAINBOW_HIGHLIGHT = env.RAINBOW_HIGHLIGHT or false
-env.SCRIPT_ACTIVE = true
-env.UI_TOGGLE_KEY = env.UI_TOGGLE_KEY or Enum.KeyCode.LeftControl
-env.STOP_KEY = Enum.KeyCode.F1
-env.CURRENT_THEME = env.CURRENT_THEME or "Violet"
-
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- UI Module Link (Replace with your actual raw Gist link for the Universal UI Module)
-local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-UI-Library.lua"
+-- =========================================================================
+-- CONFIGURATION MANAGER (JSON Workspace Saving)
+-- =========================================================================
+local CONFIG_FILE = "AreumHub_Config.json"
+
+local ConfigManager = {
+    Data = {
+        CurrentTheme = "Violet",
+        ToggleKey = "LeftControl",
+        AutoFarm = false,
+        RainbowHighlight = false
+    }
+}
+
+function ConfigManager:Load()
+    if isfile and isfile(CONFIG_FILE) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(CONFIG_FILE))
+        end)
+        if success and type(decoded) == "table" then
+            print("[Areum Hub] Configuration loaded successfully from workspace.")
+            for k, v in pairs(decoded) do
+                ConfigManager.Data[k] = v
+            end
+        end
+    end
+end
+
+function ConfigManager:Save()
+    local success, encoded = pcall(function()
+        return HttpService:JSONEncode(self.Data)
+    end)
+    if success and writefile then
+        pcall(function()
+            writefile(CONFIG_FILE, encoded)
+        end)
+    end
+end
+
+-- Load config data on startup
+ConfigManager:Load()
+
+-- Environment Configuration Defaults (Synced with ConfigManager data)
+env.AUTO_FARM = ConfigManager.Data.AutoFarm
+env.RAINBOW_HIGHLIGHT = ConfigManager.Data.RainbowHighlight
+env.SCRIPT_ACTIVE = true
+env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.LeftControl
+env.STOP_KEY = Enum.KeyCode.F1
+env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
+
+-- UI Module Link (Make sure this points to your raw GitHub UI Library file)
+local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
 -- Load Universal UI Module asynchronously
 task.spawn(function()
     local success, err = pcall(function()
         local AreumUI = loadstring(game:HttpGet(UIModuleLink))()
         
-        -- Initialize Universal Window & Tabs using the new modular API
+        -- Initialize Universal Window & Tabs using the modular API
         local Window = AreumUI:CreateWindow({
             Title = "Areum Hub",
             Theme = env.CURRENT_THEME,
@@ -48,6 +91,8 @@ task.spawn(function()
             Default = env.AUTO_FARM,
             Callback = function(state)
                 env.AUTO_FARM = state
+                ConfigManager.Data.AutoFarm = state
+                ConfigManager:Save()
             end
         })
 
@@ -59,6 +104,8 @@ task.spawn(function()
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
+                ConfigManager.Data.CurrentTheme = selectedTheme
+                ConfigManager:Save()
                 if typeof(env.CloseAreumHub) == "function" then
                     env.CloseAreumHub()
                 end
@@ -70,6 +117,8 @@ task.spawn(function()
             Default = env.RAINBOW_HIGHLIGHT,
             Callback = function(state)
                 env.RAINBOW_HIGHLIGHT = state
+                ConfigManager.Data.RainbowHighlight = state
+                ConfigManager:Save()
             end
         })
 
@@ -215,7 +264,7 @@ local function getLogs()
     forceAnchor(true)
 end
 
--- Main Optimized Automation Loop
+-- Main Automation Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.02) do
         if env.AUTO_FARM then
@@ -266,7 +315,7 @@ task.spawn(function()
     end
 end)
 
--- Comprehensive Cleanup Routine
+-- Cleanup Routine
 local function closeScriptRoutine()
     env.SCRIPT_ACTIVE = false
     env.AUTO_FARM = false
