@@ -1,7 +1,8 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.448.3 | Supports UI Library Versions From 2.000.0 ]")
+local version = "2.471.6"
+print(`[ Loader Version: v{version} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
 
@@ -38,6 +39,7 @@ local ConfigManager = {
         AUBulkPlace = false,
         AUReach = false,
         AUHandcartSpeed = false,
+        FetchVersions = false,
     }
 }
 
@@ -97,10 +99,16 @@ env.AUBULKPLACE = ConfigManager.Data.AUBulkPlace
 env.AUREACH = ConfigManager.Data.AUReach
 env.AUHANDCARTSPEED = ConfigManager.Data.AUHandcartSpeed
 
+env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
+
+local useless_local = false
+
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
+local DataLibraryLink = ""
 
 -- Mobile Floating Button Management
 local mobileButtonGui = nil
+local onupdate = nil
 
 local function setupMobileButton(enabled)
     if enabled then
@@ -344,7 +352,6 @@ task.spawn(function()
                 env.DISABLE3DRENDERING = state
                 ConfigManager.Data.Disable3DRendering = state
                 ConfigManager:Save()
-                setupMobileButton(state)
             end
         })
 
@@ -362,6 +369,17 @@ task.spawn(function()
         })
 
         ConfigTab:CreateSection("Debug Library ://")
+
+        ConfigTab:CreateToggle({
+            Name = "Fetch Versions with GitHub",
+            Default = env.FETCHVERSIONS,
+            Callback = function(state)
+                env.FETCHVERSIONS = state
+                ConfigManager.Data.FetchVersions = state
+                ConfigManager:Save()
+            end
+        })
+
         ConfigTab:CreateButton({
             Name = "Kill Loader (F1)",
             Callback = function()
@@ -374,6 +392,40 @@ task.spawn(function()
         if env.MOBILE_BUTTON then
             setupMobileButton(true)
         end
+
+        onupdate = function(newver: string)
+            local UpdateTab = Window:CreateTab("Update!", "rbxassetid://4869184613")
+
+            UpdateTab:CreateSection("Update News ://")
+
+            UpdateTab:CreateToggle({
+                Name = `New Version Detected | v.{newver}`,
+                Default = useless_local,
+                Callback = function(state)
+                    useless_local = state
+                end
+            })
+
+            UpdateTab:CreateButton({
+                Name = "Load into New Version | v."..newver,
+                Callback = function()
+                    if typeof(env.CloseAreumHub) == "function" then
+                        task.delay(1,function()
+                            local result, err = pcall(function()
+                                local AreumUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Built-the-Railroad-Loader.lua"))()
+                            end)
+
+                            if err then 
+                                warn("[Areum Hub]: Error Received While loading |"..err)
+                            end
+                        end)
+                        env.CloseAreumHub()
+                    end
+                end
+            })
+
+        end
+
     end)
     
     if not success then
@@ -515,6 +567,17 @@ local function getLogs()
     forceAnchor(false)
 end
 
+task.spawn(function()
+
+    while task.wait(30) do
+        local GitHub_Version = loadstring(game:HttpGet(DataLibraryLink))()
+        if GitHub_Version.Loaders.BTRLoader.version ~= version then
+            onupdate(GitHub_Version.Loaders.BTRLoader.version)
+        end
+    end
+    
+end)
+
 -- Main Automation Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.01) do
@@ -646,6 +709,7 @@ local function closeScriptRoutine()
     env.AUBULKPLACE = false
     env.AUREACH = false
     env.AUHANDCARTSPEED = false
+    env.FETCHVERSIONS = false
     
     setupMobileButton(false)
 
