@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.401.3 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.401.4 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -302,16 +302,11 @@ local function getLogs()
     hrp.Position = logs.Position + Vector3.new(0, 3, 0)
     task.wait()
     
-    if env.AUTO_FARM and env.SCRIPT_ACTIVE then 
-        forceAnchor(false)
-    end
-    
-    -- Fixed timeout window from 0.1 to 2.5 seconds to ensure logs are fully collected
     local startTime = os.clock()
     repeat
-            fireproximityprompt(prox_collect_logs)
-            hrp.Position = logs.Position + Vector3.new(0, 3, 0)
-            task.wait(0.1)
+        fireproximityprompt(prox_collect_logs)
+        hrp.Position = logs.Position + Vector3.new(0, 3, 0)
+        task.wait(0.1)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
     forceAnchor(false)
@@ -321,61 +316,56 @@ end
 -- Main Automation Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.01) do
-        if env.AUTO_FARM and game_state:GetAttribute("Phase") == "Build" then
-            local logAmount = getLogAmount()
-            if logAmount <= 0 then
-                getLogs()
-                logAmount = getLogAmount() -- Refresh count after fetching
-            end
-
-            if not bridge_newest_position and env.SCRIPT_ACTIVE then
-                if hrp then 
-                    forceAnchor(false)
-                end
-                repeat task.wait(0.02) until bridge_newest_position or not env.AUTO_FARM or not env.SCRIPT_ACTIVE
-            end
-
-            if env.AUTO_FIX and hrp and env.SCRIPT_ACTIVE then
+        -- AUTO FIX BRIDGE JOBS
+        if env.AUTO_FIX and repair_jobs_fldr and env.SCRIPT_ACTIVE then
+            pcall(function()
                 for _, job in pairs(repair_jobs_fldr:GetChildren()) do
-                    if hrp and env.AUTO_FIX and env.SCRIPT_ACTIVE then
-                        if job:FindFirstChild("Crack") then
-                            forceAnchor(false)
-                            hrp.Position = job.CardAnchor.Position + Vector3.new(0,2,0)
-                            if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
-                                keypress(0x45)
-                            end
+                    if hrp and env.AUTO_FIX and env.SCRIPT_ACTIVE and job:FindFirstChild("Crack") then
+                        forceAnchor(false)
+                        if job:FindFirstChild("CardAnchor") then
+                            hrp.Position = job.CardAnchor.Position + Vector3.new(0, 2, 0)
                         end
+                        if typeof(keypress) == "function" then
+                            keypress(0x45)
+                        end
+                        task.wait(0.1)
                     end
                 end
-            end
+            end)
+        end
 
-            if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount > 0 then
-                forceAnchor(false)
-                task.wait()
-                hrp.Position = bridge_newest_position + Vector3.new(0,2,0)
-                task.wait()
+        -- AUTO FARM MONEY / LOGS
+        if env.AUTO_FARM then
+            local currentPhase = game_state:GetAttribute("Phase")
+            -- Fallback if phase attribute is missing or matches Build
+            if not currentPhase or currentPhase == "Build" then
+                local logAmount = getLogAmount()
                 
-                if env.AUTO_FARM and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" then 
-                    forceAnchor(false) 
+                if logAmount <= 0 then
+                    getLogs()
+                    logAmount = getLogAmount()
                 end
 
-                -- Optimized: Press E down once instead of spamming keypress/keyrelease every frame
-                if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
-                    keypress(0x45)
-                end
+                -- Non-blocking check for bridge position so it never freezes execution
+                if bridge_newest_position and hrp and logAmount > 0 and env.SCRIPT_ACTIVE then
+                    forceAnchor(false)
+                    task.wait()
+                    hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
+                    task.wait()
 
-                local startTime = os.clock()
-                repeat 
-                    task.wait(0.05)
-                    local timePassed = os.clock() - startTime
-                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.8 or game_state:GetAttribute("Phase") ~= "Build"
-                
-                -- Release E once building/drop-off is done
-                if typeof(keyrelease) == "function" then
-                    keyrelease(0x45)
+                    if typeof(keypress) == "function" then
+                        keypress(0x45)
+                    end
+
+                    local startTime = os.clock()
+                    repeat 
+                        task.wait(0.05)
+                    until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.8
+                    
+                    if typeof(keyrelease) == "function" then
+                        keyrelease(0x45)
+                    end
                 end
-                
-                forceAnchor(false)
             end
         else
             if hrp and hrp.Anchored then
@@ -383,29 +373,31 @@ task.spawn(function()
             end
         end
 
+        -- TRAIN RIDE TP
         if env.TRAIN_TP and game_state:GetAttribute("Phase") == "Ride" and env.SCRIPT_ACTIVE then
-            if hrp then
+            if hrp and seat then
                 forceAnchor(false)
+                hrp.Position = seat.Position + Vector3.new(0, 2, 2)
+                if character:FindFirstChild("Humanoid") then
+                    character.Humanoid.Jump = true
+                end
             end
-            hrp.Position = seat.Position + Vector3.new(0, 2, 2)
-
-            character.Humanoid.Jump = true
-
         end
 
+        -- COLLECT LOOT
         if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" and env.SCRIPT_ACTIVE then
-            if hrp then
+            if hrp and loot_fldr then
                 forceAnchor(false)
-            end
-            for _, lootspot in pairs(loot_fldr:GetChildren()) do
-                if hrp and env.SCRIPT_ACTIVE and env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
-                    hrp.Position = lootspot.Position + Vector3.new(0, 2, 0)
-                    task.wait(0.1)
+                for _, lootspot in pairs(loot_fldr:GetChildren()) do
+                    if hrp and env.SCRIPT_ACTIVE and env.COLLECT_LOOT then
+                        hrp.Position = lootspot.Position + Vector3.new(0, 2, 0)
+                        task.wait(0.1)
                     else
                         break
                     end
                 end
             end
+        end
     end
 end)
 
