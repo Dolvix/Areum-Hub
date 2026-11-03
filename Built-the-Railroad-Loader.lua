@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.372.6 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.373.2 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -290,17 +290,18 @@ local function getLogs()
     task.wait()
     
     if env.AUTO_FARM and env.SCRIPT_ACTIVE then 
-        forceAnchor(true)
+        forceAnchor(false)
     end
     
     -- Fixed timeout window from 0.1 to 2.5 seconds to ensure logs are fully collected
     local startTime = os.clock()
     repeat
             fireproximityprompt(prox_collect_logs)
-            task.wait(0.1)
+            hrp.Position = logs.Position + Vector3.new(0, 3, 0)
+            task.wait(0.25)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
-    forceAnchor(true)
+    forceAnchor(false)
     task.wait(0.1)
 end
 
@@ -360,16 +361,16 @@ task.spawn(function()
             if hrp then
                 forceAnchor(false)
             end
-            hrp.Position = seat.Position + Vector3.new(0, 2, 0)
+            hrp.Position = seat.Position + Vector3.new(2, 2, 0)
         end
 
         if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
             if hrp then
-                forceAnchor(true)
+                forceAnchor(false)
             end
             for _, lootspot in pairs(loot_fldr:GetChildren()) do
                 if hrp then
-                    hrp.Position = lootspot.Position + Vector3.new(0, 1, 0)
+                    hrp.Position = lootspot.Position + Vector3.new(0, 2, 0)
                     task.wait(0.25)
                 end
             end
