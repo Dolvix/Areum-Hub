@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.445.9 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.446.1 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -203,7 +203,7 @@ task.spawn(function()
         })
         env.AreumUI = Window
 
-        local FarmTab = Window:CreateTab("Farming", "rbxassetid://13353741942")
+        local FarmTab = Window:CreateTab("Farming", "rbxassetid://116592854241448")
         local UpgradesTab = Window:CreateTab("Upgrades", "rbxassetid://7246622296")
         local ConfigTab = Window:CreateTab("Settings", "rbxassetid://18397244060")
 
@@ -252,7 +252,7 @@ task.spawn(function()
         -- Upgrades Tab Controls
         UpgradesTab:CreateSection("Auto Upgrades ://")
 
-        ConfigTab:CreateToggle({
+        UpgradesTab:CreateToggle({
             Name = "Auto Upgrade Carry",
             Default = env.AUCARRY,
             Callback = function(state)
@@ -262,7 +262,7 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateToggle({
+        UpgradesTab:CreateToggle({
             Name = "Auto Upgrade Speed",
             Default = env.AUSPEED,
             Callback = function(state)
@@ -272,7 +272,7 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateToggle({
+        UpgradesTab:CreateToggle({
             Name = "Auto Upgrade Bulk Place",
             Default = env.AUBULKPLACE,
             Callback = function(state)
@@ -282,7 +282,7 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateToggle({
+        UpgradesTab:CreateToggle({
             Name = "Auto Upgrade Reach",
             Default = env.AUREACH,
             Callback = function(state)
@@ -292,7 +292,7 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateToggle({
+        UpgradesTab:CreateToggle({
             Name = "Auto Upgrade Handcart Speed",
             Default = env.AUHANDCARTSPEED,
             Callback = function(state)
