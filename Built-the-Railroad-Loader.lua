@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-print("[ Loader Version: 2.405.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.406.6 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -14,6 +14,7 @@ env.AreumHubExecuted = true
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- =========================================================================
@@ -31,6 +32,7 @@ local ConfigManager = {
         CollectLoot = false,
         AutoFix = false,
         MobileButton = false,
+        Disable3DRendering = false,
     }
 }
 
@@ -82,6 +84,7 @@ env.TRAIN_TP = ConfigManager.Data.TrainTp
 env.COLLECT_LOOT = ConfigManager.Data.CollectLoot
 env.AUTO_FIX = ConfigManager.Data.AutoFix
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
+env.DISABLE3DRENDERING = ConfigManager.Data.Disable3DRendering
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
@@ -193,7 +196,7 @@ task.spawn(function()
         local ConfigTab = Window:CreateTab("Config", "rbxassetid://18397244060")
 
         -- Main Tab Controls
-        MainTab:CreateSection("Auto Progress Options //")
+        MainTab:CreateSection("Auto Progress Options ://")
         MainTab:CreateToggle({
             Name = "Farm Money",
             Default = env.AUTO_FARM,
@@ -235,7 +238,7 @@ task.spawn(function()
         })
 
         -- Config Tab Controls
-        ConfigTab:CreateSection("Themes | Visuals Options //")
+        ConfigTab:CreateSection("Themes / Visuals Options ://")
         ConfigTab:CreateDropdown({
             Name = "Theme",
             Items = {"Violet", "Blue", "Crimson"},
@@ -267,7 +270,21 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateSection("Mobile / Layout Options //")
+        ConfigTab:CreateSection("Rendering ://")
+
+        ConfigTab:CreateToggle({
+            Name = "3D Rendering",
+            Default = env.DISABLE3DRENDERING,
+            Callback = function(state)
+                env.DISABLE3DRENDERING = state
+                ConfigManager.Data.Disable3DRendering = state
+                ConfigManager:Save()
+                setupMobileButton(state)
+            end
+        })
+
+        ConfigTab:CreateSection("Mobile Options ://")
+
         ConfigTab:CreateToggle({
             Name = "Mobile Button",
             Default = env.MOBILE_BUTTON,
@@ -450,6 +467,12 @@ task.spawn(function()
             end)
         end
 
+        -- AUTO 3D RENDERING
+
+        pcall(function()
+            RunService:Set3dRenderingEnabled(not env.DISABLE3DRENDERING)
+        end)
+
         -- AUTO FARM MONEY / LOGS
         if env.AUTO_FARM then
             local currentPhase = game_state:GetAttribute("Phase")
@@ -528,12 +551,15 @@ local function closeScriptRoutine()
     env.COLLECT_LOOT = false
     env.AUTO_FIX = false
     env.MOBILE_BUTTON = false
+    env.DISABLE3DRENDERING = false
     
     setupMobileButton(false)
 
     if device_supported then
         pcall(function() keyrelease(0x45) end)
     end
+
+    RunService:Set3dRenderingEnabled(true)
 
     if hrp then forceAnchor(false) end
     if trail then trail:Destroy() end
