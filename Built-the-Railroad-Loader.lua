@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.376.5 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.401.2 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -28,7 +28,8 @@ local ConfigManager = {
         AutoFarm = false,
         RainbowHighlight = false,
         TrainTp = false,
-        CollectLoot = false
+        CollectLoot = false,
+        AutoFix = false,
     }
 }
 
@@ -69,6 +70,7 @@ env.STOP_KEY = Enum.KeyCode.F1
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.TRAIN_TP = ConfigManager.Data.TrainTp
 env.COLLECT_LOOT = ConfigManager.Data.CollectLoot
+env.AUTO_FIX = ConfigManager.Data.AutoFix
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
@@ -89,7 +91,7 @@ task.spawn(function()
         local ConfigTab = Window:CreateTab("Config", "rbxassetid://18397244060")
 
         -- Main Tab Controls
-        MainTab:CreateSection("Main Functions")
+        MainTab:CreateSection("Auto Progress Options //")
         MainTab:CreateToggle({
             Name = "Farm Money",
             Default = env.AUTO_FARM,
@@ -101,7 +103,7 @@ task.spawn(function()
         })
 
         MainTab:CreateToggle({
-            Name = "Teleport to Train on Finish",
+            Name = "Auto Ride Train",
             Default = env.TRAIN_TP,
             Callback = function(state)
                 env.TRAIN_TP = state
@@ -120,8 +122,18 @@ task.spawn(function()
             end
         })
 
+        MainTab:CreateToggle({
+            Name = "Auto Fix Bridge",
+            Default = env.AUTO_FIX,
+            Callback = function(state)
+                env.AUTO_FIX = state
+                ConfigManager.Data.AutoFix = state
+                ConfigManager:Save()
+            end
+        })
+
         -- Config Tab Controls
-        ConfigTab:CreateSection("Theme / Visual")
+        ConfigTab:CreateSection("Themes | Visuals Options //")
         ConfigTab:CreateDropdown({
             Name = "Theme",
             Items = {"Violet", "Blue", "Crimson"},
@@ -174,6 +186,7 @@ end)
 local logs = workspace:WaitForChild("World"):WaitForChild("Yard"):WaitForChild("TimberPile"):WaitForChild("PromptPart")
 local prox_collect_logs = logs:WaitForChild("ProximityPrompt")
 local loot_fldr = workspace.World.Town.LootSpots
+local repair_jobs_fldr = workspace.RepairJobs
 
 local bridge_newest_position = nil
 local character = player.Character or player.CharacterAdded:Wait()
@@ -284,7 +297,7 @@ end
 local function getLogs()
     if not hrp or not env.SCRIPT_ACTIVE then return end
     
-    forceAnchor(false)
+    forceAnchor(false)s
     task.wait()
     hrp.Position = logs.Position + Vector3.new(0, 3, 0)
     task.wait()
@@ -298,14 +311,13 @@ local function getLogs()
     repeat
             fireproximityprompt(prox_collect_logs)
             hrp.Position = logs.Position + Vector3.new(0, 3, 0)
-            task.wait(0.25)
+            task.wait(0.1)
     until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 2.5
     
     forceAnchor(false)
     task.wait(0.1)
 end
 
--- Main Automation Loop
 -- Main Automation Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.01) do
@@ -321,6 +333,20 @@ task.spawn(function()
                     forceAnchor(false)
                 end
                 repeat task.wait(0.02) until bridge_newest_position or not env.AUTO_FARM or not env.SCRIPT_ACTIVE
+            end
+
+            if env.AUTO_FIX and hrp and env.SCRIPT_ACTIVE then
+                for _, job in pairs(repair_jobs_fldr:GetChildren()) do
+                    if hrp and env.AUTO_FIX and env.SCRIPT_ACTIVE then
+                        if job:FindFirstChild("Crack") then
+                            forceAnchor(false)
+                            hrp.Position = job.CardAnchor.Position + Vector3.new(0,2,0)
+                            if typeof(keypress) == "function" and typeof(keyrelease) == "function" then
+                                keypress(0x45)
+                            end
+                        end
+                    end
+                end
             end
 
             if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount > 0 then
@@ -357,7 +383,7 @@ task.spawn(function()
             end
         end
 
-        if env.TRAIN_TP and game_state:GetAttribute("Phase") == "Ride" then
+        if env.TRAIN_TP and game_state:GetAttribute("Phase") == "Ride" and env.SCRIPT_ACTIVE then
             if hrp then
                 forceAnchor(false)
             end
@@ -367,17 +393,22 @@ task.spawn(function()
 
         end
 
-        if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
+        if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" and env.SCRIPT_ACTIVE then
             if hrp then
                 forceAnchor(false)
             end
             for _, lootspot in pairs(loot_fldr:GetChildren()) do
-                if hrp then
+                if hrp and env.SCRIPT_ACTIVE and env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
                     hrp.Position = lootspot.Position + Vector3.new(0, 2, 0)
                     task.wait(0.1)
+                    else
+                        break
+                    end
                 end
             end
         end
+
+
     end
 end)
 
@@ -389,6 +420,7 @@ local function closeScriptRoutine()
     env.AreumHubExecuted = false
     env.TRAIN_TP = false
     env.COLLECT_LOOT = false
+    env.AUTO_FIX = false
     
     pcall(function() keyrelease(0x45) end)
     if hrp then forceAnchor(false) end
