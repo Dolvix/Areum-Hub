@@ -65,6 +65,8 @@ env.SCRIPT_ACTIVE = true
 env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.LeftControl
 env.STOP_KEY = Enum.KeyCode.F1
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
+env.TRAIN_TP = ConfigManager.Data.TrainTp
+env.COLLECT_LOOT = ConfigManager.Data.CollectLoot
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 
@@ -96,8 +98,28 @@ task.spawn(function()
             end
         })
 
+        MainTab:CreateToggle({
+            Name = "Teleport to Train on Finish",
+            Default = env.TRAIN_TP,
+            Callback = function(state)
+                env.TRAIN_TP = state
+                ConfigManager.Data.TrainTp = state
+                ConfigManager:Save()
+            end
+        })
+
+        MainTab:CreateToggle({
+            Name = "Auto Collect Loot",
+            Default = env.COLLECT_LOOT,
+            Callback = function(state)
+                env.COLLECT_LOOT = state
+                ConfigManager.Data.CollectLoot = state
+                ConfigManager:Save()
+            end
+        })
+
         -- Config Tab Controls
-        ConfigTab:CreateSection("Appearance / Theme")
+        ConfigTab:CreateSection("Theme / Visual")
         ConfigTab:CreateDropdown({
             Name = "Theme",
             Items = {"Violet", "Blue", "Crimson"},
@@ -121,7 +143,7 @@ task.spawn(function()
         })
 
         ConfigTab:CreateToggle({
-            Name = "Rainbow Highlight",
+            Name = "Rainbow Visuals",
             Default = env.RAINBOW_HIGHLIGHT,
             Callback = function(state)
                 env.RAINBOW_HIGHLIGHT = state
@@ -130,9 +152,9 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateSection("Process Control")
+        ConfigTab:CreateSection("Debug Library")
         ConfigTab:CreateButton({
-            Name = "End Process (F1)",
+            Name = "Kill Loader (F1)",
             Callback = function()
                 if typeof(env.CloseAreumHub) == "function" then
                     env.CloseAreumHub()
@@ -149,10 +171,18 @@ end)
 -- Game Automation References
 local logs = workspace:WaitForChild("World"):WaitForChild("Yard"):WaitForChild("TimberPile"):WaitForChild("PromptPart")
 local prox_collect_logs = logs:WaitForChild("ProximityPrompt")
+local loot_fldr = workspace.World.Town.LootSpots
 
 local bridge_newest_position = nil
 local character = player.Character or player.CharacterAdded:Wait()
 local hrp = character:WaitForChild("HumanoidRootPart")
+
+local train = workspace.World.Train
+local seat = train.Carriage2:FindFirstChild("Seat")
+
+local game_state = game:GetService("ReplicatedStorage").GameState
+-- Phase: Ride
+-- Phase: Building
 
 -- Rainbow Visual Effects Setup
 local function createRainbowVisuals(char)
@@ -256,7 +286,7 @@ local function getLogs()
     
     forceAnchor(false)
     task.wait()
-    hrp.CFrame = logs.CFrame
+    hrp.Position = ( logs.Position + Vector3.new(0,3,0))
     task.wait()
     
     if env.AUTO_FARM and env.SCRIPT_ACTIVE then 
@@ -274,7 +304,7 @@ local function getLogs()
             fireproximityprompt(prox_collect_logs)
         end
         task.wait(0.1)
-    until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.5
+    until getLogAmount() > 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.1
     
     forceAnchor(true)
     task.wait(0.1) -- Brief pause to ensure stable state transition
@@ -282,8 +312,8 @@ end
 
 -- Main Automation Loop
 task.spawn(function()
-    while env.SCRIPT_ACTIVE and task.wait(0.02) do
-        if env.AUTO_FARM then
+    while env.SCRIPT_ACTIVE and task.wait(0.01) do
+        if env.AUTO_FARM and game_state:GetAttribute("Phase") == "Build" then
             local logAmount = getLogAmount()
             if logAmount <= 0 then
                 getLogs()
@@ -296,13 +326,13 @@ task.spawn(function()
                 repeat task.wait(0.02) until bridge_newest_position or not env.AUTO_FARM or not env.SCRIPT_ACTIVE
             end
 
-            if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE then
+            if env.AUTO_FARM and bridge_newest_position and hrp and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" and logAmount() > 0 then
                 forceAnchor(false)
                 task.wait()
                 hrp.CFrame = bridge_newest_position
                 task.wait()
                 
-                if env.AUTO_FARM and env.SCRIPT_ACTIVE then 
+                if env.AUTO_FARM and env.SCRIPT_ACTIVE and game_state:GetAttribute("Phase") == "Build" then 
                     forceAnchor(true) 
                 end
 
@@ -317,7 +347,7 @@ task.spawn(function()
                     task.wait()
                     
                     local timePassed = os.clock() - startTime
-                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.4
+                until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or timePassed > 0.4 or not game_state:GetAttribute("Phase") == "Build"
                 
                 pcall(function() keyrelease(0x45) end)
                 forceAnchor(true)
@@ -327,6 +357,29 @@ task.spawn(function()
                 forceAnchor(false)
             end
         end
+
+        if env.TRAIN_TP and game_state:GetAttribute("Phase") == "Ride" then
+
+            if hrp then
+                forceAnchor(false)
+            end
+
+            hrp.Positition = (seat.Position + Vector3.new(0,2,0))
+
+        end
+
+        if env.COLLECT_LOOT and game_state:GetAttribute("Phase") == "Loot" then
+
+            if hrp then
+                forceAnchor(true)
+            end
+
+            for _, lootspot in pairs(loot_fldr:GetChildren())
+                hrp.Positition = (lootspot.Position + Vector3.new(0,1,0))
+                task.wait(0.25)
+            end
+
+        end
     end
 end)
 
@@ -335,7 +388,9 @@ local function closeScriptRoutine()
     env.SCRIPT_ACTIVE = false
     env.AUTO_FARM = false
     env.RAINBOW_HIGHLIGHT = false
-    env.AreumHubExecuted = false 
+    env.AreumHubExecuted = false
+    env.TRAIN_TP = false
+    env.COLLECT_LOOT = false
     
     pcall(function() keyrelease(0x45) end)
     if hrp then forceAnchor(false) end
