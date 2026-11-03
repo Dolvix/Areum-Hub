@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.401.4 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.402.1 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -187,6 +187,7 @@ local logs = workspace:WaitForChild("World"):WaitForChild("Yard"):WaitForChild("
 local prox_collect_logs = logs:WaitForChild("ProximityPrompt")
 local loot_fldr = workspace.World.Town.LootSpots
 local repair_jobs_fldr = workspace.RepairJobs
+local mobile_button = player.PlayerGui.BridgeTouch.Action
 
 local bridge_newest_position = nil
 local character = player.Character or player.CharacterAdded:Wait()
@@ -196,6 +197,13 @@ local train = workspace.World.Train
 local seat = train.Carriage2:FindFirstChild("Seat")
 
 local game_state = game:GetService("ReplicatedStorage").GameState
+local device_supported = nil
+
+if UserInputService.KeyboardEnabled then
+        device_supported = true
+    else 
+        device_supported = false
+end
 
 -- Rainbow Visual Effects Setup
 local function createRainbowVisuals(char)
@@ -325,9 +333,6 @@ task.spawn(function()
                         if job:FindFirstChild("CardAnchor") then
                             hrp.Position = job.CardAnchor.Position + Vector3.new(0, 2, 0)
                         end
-                        if typeof(keypress) == "function" then
-                            keypress(0x45)
-                        end
                         task.wait(0.1)
                     end
                 end
@@ -352,18 +357,23 @@ task.spawn(function()
                     task.wait()
                     hrp.Position = bridge_newest_position + Vector3.new(0, 2, 0)
                     task.wait()
-
-                    if typeof(keypress) == "function" then
-                        keypress(0x45)
+                    
+                    if device_supported then
+                        if typeof(keypress) == "function" then
+                            keypress(0x45)
+                        end
                     end
 
                     local startTime = os.clock()
                     repeat 
                         task.wait(0.05)
+                        if not device_supported then mobile_button:Active() end
                     until getLogAmount() == 0 or not env.AUTO_FARM or not env.SCRIPT_ACTIVE or (os.clock() - startTime) > 0.8
                     
-                    if typeof(keyrelease) == "function" then
-                        keyrelease(0x45)
+                    if device_supported then
+                        if typeof(keyrelease) == "function" then
+                            keyrelease(0x45)
+                        end
                     end
                 end
             end
