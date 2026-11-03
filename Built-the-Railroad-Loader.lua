@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM HUB LOADER (Version: 2.2.0 - Built the Railroad Loader.)
+-- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.201.1 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.203.1 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
@@ -255,7 +255,6 @@ local function getLogs()
     if not hrp or not env.SCRIPT_ACTIVE then return end
     
     forceAnchor(false)
-    task.wait()
     hrp.CFrame = logs.CFrame
     task.wait()
     
@@ -263,13 +262,14 @@ local function getLogs()
         forceAnchor(true)
     end
     
-    for i = 1, 5 do
-        if not env.SCRIPT_ACTIVE or not env.AUTO_FARM then break end
+    repeat
         fireproximityprompt(prox_collect_logs)
-        task.wait(0.05)
-    end
+        task.wait()
+    until getLogAmount ~= 0 or env.AUTO_FARM or not env.SCRIPT_ACTIVE
     
     forceAnchor(true)
+
+    return true
 end
 
 -- Main Automation Loop
@@ -279,7 +279,6 @@ task.spawn(function()
             local logAmount = getLogAmount()
             if logAmount <= 0 then
                 getLogs()
-                task.wait()
             end
 
             if not bridge_newest_position and env.SCRIPT_ACTIVE then
