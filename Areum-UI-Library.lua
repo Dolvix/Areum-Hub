@@ -1,6 +1,8 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Universal Modular Edition)
 -- =========================================================================
+print("[ UI Library Version: 2.031.1 | Supports Loader Versions From 2.000.0 ]")
+
 local AreumUI = {}
 AreumUI.__index = AreumUI
 
