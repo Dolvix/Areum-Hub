@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Universal Modular Edition)
 -- =========================================================================
-print("[ UI Library Version: 2.033.1 | Supports Loader Versions From 2.000.0 ]")
+print("[ UI Library Version: 2.033.2 | Supports Loader Versions From 2.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -29,7 +29,7 @@ local Themes = {
         Accent = Color3.fromRGB(27, 216, 2),
         TextMuted = Color3.fromRGB(2, 114, 11)
     },
-    Blue = {
+    Ocean = {
         Background = Color3.fromRGB(10, 14, 20),
         Sidebar = Color3.fromRGB(6, 9, 14),
         Row = Color3.fromRGB(16, 22, 32),

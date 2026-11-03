@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.472.2"
+local Lversion = "2.472.3"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -212,9 +212,9 @@ task.spawn(function()
         })
         env.AreumUI = Window
 
-        local FarmTab = Window:CreateTab("Farming", "rbxassetid://116592854241448")
+        local FarmTab = Window:CreateTab(" Farming", "rbxassetid://116592854241448")
         local UpgradesTab = Window:CreateTab("Upgrades", "rbxassetid://7246622296")
-        local ConfigTab = Window:CreateTab("Settings", "rbxassetid://18397244060")
+        local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
 
         -- Main Tab Controls
         FarmTab:CreateSection("Auto Progress Options ://")
@@ -315,7 +315,7 @@ task.spawn(function()
         ConfigTab:CreateSection("Themes / Visuals Options ://")
         ConfigTab:CreateDropdown({
             Name = "Theme",
-            Items = {"Violet", "Blue", "Crimson"},
+            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Light"},
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
