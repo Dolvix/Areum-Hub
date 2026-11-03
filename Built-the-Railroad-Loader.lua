@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Built the Railroad Loader.)
 -- =========================================================================
-print("[ Loader Version: 2.204.7 | Supports UI Library Versions From 2.000.0 ]")
+print("[ Loader Version: 2.371.2 | Supports UI Library Versions From 2.000.0 ]")
 
 local env = getfenv(0)
 
