@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.000.1"
+local Lversion = "2.000.2"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -188,7 +188,7 @@ task.spawn(function()
         })
         env.AreumUI = Window
 
-        local MainTab = Window:CreateTab("Main", "rbxassetid://12849292746")
+        local MainTab = Window:CreateTab("Main", "rbxassetid://8772194322")
         local WeaponsTab = Window:CreateTab("Weapons", "rbxassetid://7246622296")
         local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
 
