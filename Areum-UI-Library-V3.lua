@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Debug Tool - Private Version)
 -- =========================================================================
-print("[ UI Library Version: 3.004.3 | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.005.1 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -49,14 +49,32 @@ local Themes = {
         TextMuted = Color3.fromRGB(200, 150, 150),
         BackgroundImage = "rbxassetid://92523071261344"
     },
-    Light = {
+    Noise = {
         BackgroundGradient = {Color3.fromRGB(250, 250, 250), Color3.fromRGB(168, 168, 168)},
-        Sidebar = Color3.fromRGB(141, 141, 141),
-        Row = Color3.fromRGB(99, 99, 99),
-        Stroke = Color3.fromRGB(27, 27, 27),
-        Accent = Color3.fromRGB(59, 59, 59),
-        TextMuted = Color3.fromRGB(102, 102, 102),
+        Sidebar = Color3.fromRGB(199, 199, 199),
+        Row = Color3.fromRGB(146, 146, 146),
+        Stroke = Color3.fromRGB(5, 5, 5),
+        Accent = Color3.fromRGB(102, 102, 102),
+        TextMuted = Color3.fromRGB(68, 68, 68),
         BackgroundImage = "rbxassetid://79071105946443"
+    },
+    Sakura = {
+        BackgroundGradient = {Color3.fromRGB(255, 114, 255), Color3.fromRGB(253, 202, 255)},
+        Sidebar = Color3.fromRGB(182, 101, 182),
+        Row = Color3.fromRGB(226, 141, 212),
+        Stroke = Color3.fromRGB(223, 144, 216),
+        Accent = Color3.fromRGB(255, 96, 202),
+        TextMuted = Color3.fromRGB(219, 116, 206),
+        BackgroundImage = "rbxassetid://17070917034"
+    },
+    Void = {
+        BackgroundGradient = {Color3.fromRGB(17, 17, 17), Color3.fromRGB(0, 0, 0)},
+        Sidebar = Color3.fromRGB(8, 8, 8),
+        Row = Color3.fromRGB(26, 16, 16),
+        Stroke = Color3.fromRGB(8, 8, 8),
+        Accent = Color3.fromRGB(255, 255, 255),
+        TextMuted = Color3.fromRGB(168, 168, 168),
+        BackgroundImage = "rbxassetid://121773936326002"
     },
 }
 

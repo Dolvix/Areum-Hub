@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Universal Debug Tool - Developer Edition)
 -- =========================================================================
-local Lversion = "[Developer]"
+local Lversion = "DEV-NLY"
 print(`[ Loader Version: v{Lversion} | Universal Modular Mode ]`)
 
 local env = getfenv(0)
@@ -34,7 +34,7 @@ local ConfigManager = {
         CustomAssetURL = "",
         DebugSliderVal = 50,
         DebugInputText = "",
-        InfoDisplay = "System Standby"
+        InfoDisplay = "Debug"
     }
 }
 
@@ -237,7 +237,7 @@ task.spawn(function()
         
         ConfigTab:CreateDropdown({
             Name = "Theme Selector",
-            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Light"},
+            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"},
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
