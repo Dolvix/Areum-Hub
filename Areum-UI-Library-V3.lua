@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Debug Tool - Private Version)
 -- =========================================================================
-print("[ UI Library Version: 3.004.2 | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.004.3 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -181,7 +181,7 @@ function AreumUI:CreateWindow(config)
         end
     end))
 
-    -- Sidebar Setup (Transparency: 0.75)
+    -- Sidebar Setup 
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
@@ -277,7 +277,7 @@ function AreumUI:CreateTab(name, iconAssetId)
     Btn.Size = UDim2.new(1, -12, 0, 40)
     Btn.Position = UDim2.new(0, 6, 0, 0)
     Btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-    Btn.BackgroundTransparency = 0.45
+    Btn.BackgroundTransparency = 0.2
     Btn.Text = "          " .. name
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 14
@@ -324,12 +324,12 @@ function AreumUI:SelectTab(name)
         local icon = btn:FindFirstChild("Icon")
         if btnName == name then
             btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-            btn.BackgroundTransparency = 0.45
+            btn.BackgroundTransparency = 0.2
             btn.TextColor3 = self.ThemeData.Accent
             if icon then icon.ImageColor3 = self.ThemeData.Accent end
         else
             btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-            btn.BackgroundTransparency = 0.45
+            btn.BackgroundTransparency = 0.2
             btn.TextColor3 = self.ThemeData.TextMuted
             if icon then icon.ImageColor3 = self.ThemeData.TextMuted end
         end
@@ -360,7 +360,7 @@ function AreumUI:CreateToggle(options)
     local Row = Instance.new("Frame")
     Row.Size = UDim2.new(1, -24, 0, 46)
     Row.BackgroundColor3 = self.Window.ThemeData.Row
-    Row.BackgroundTransparency = 0.45
+    Row.BackgroundTransparency = 0.2
     Row.Parent = self.Page
 
     local RowCorner = Instance.new("UICorner")
@@ -388,7 +388,7 @@ function AreumUI:CreateToggle(options)
     SwitchBG.Position = UDim2.new(1, -14, 0.5, -12)
     SwitchBG.AnchorPoint = Vector2.new(1, 0)
     SwitchBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    SwitchBG.BackgroundTransparency = 0.45
+    SwitchBG.BackgroundTransparency = 0.1
     SwitchBG.Text = ""
     SwitchBG.Parent = Row
 
@@ -400,7 +400,7 @@ function AreumUI:CreateToggle(options)
     SwitchBall.Size = UDim2.new(0, 18, 0, 18)
     SwitchBall.Position = UDim2.new(0, 3, 0.5, -9)
     SwitchBall.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-    SwitchBall.BackgroundTransparency = 0.45
+    SwitchBall.BackgroundTransparency = 0.1
     SwitchBall.Parent = SwitchBG
 
     local BallCorner = Instance.new("UICorner")
@@ -434,7 +434,7 @@ function AreumUI:CreateButton(options)
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, -24, 0, 40)
     Btn.BackgroundColor3 = self.Window.ThemeData.Row
-    Btn.BackgroundTransparency = 0.45
+    Btn.BackgroundTransparency = 0.2
     Btn.Text = name
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 13
@@ -463,7 +463,7 @@ function AreumUI:CreateSystemButton(options)
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, -24, 0, 40)
     Btn.BackgroundColor3 = Color3.fromRGB(24, 12, 12)
-    Btn.BackgroundTransparency = 0.45
+    Btn.BackgroundTransparency = 0.2
     Btn.Text = name
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 13
@@ -494,7 +494,7 @@ function AreumUI:CreateTextBox(options)
     local Row = Instance.new("Frame")
     Row.Size = UDim2.new(1, -24, 0, 50)
     Row.BackgroundColor3 = self.Window.ThemeData.Row
-    Row.BackgroundTransparency = 0.45
+    Row.BackgroundTransparency = 0.2
     Row.Parent = self.Page
 
     local RowCorner = Instance.new("UICorner")
@@ -522,7 +522,7 @@ function AreumUI:CreateTextBox(options)
     BoxInput.Position = UDim2.new(1, -14, 0.5, -15)
     BoxInput.AnchorPoint = Vector2.new(1, 0)
     BoxInput.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-    BoxInput.BackgroundTransparency = 0.45
+    BoxInput.BackgroundTransparency = 0.2
     BoxInput.Text = defaultText
     BoxInput.PlaceholderText = placeholder
     BoxInput.Font = Enum.Font.GothamMedium
@@ -558,7 +558,7 @@ function AreumUI:CreateSlider(options)
     local Row = Instance.new("Frame")
     Row.Size = UDim2.new(1, -24, 0, 56)
     Row.BackgroundColor3 = self.Window.ThemeData.Row
-    Row.BackgroundTransparency = 0.45
+    Row.BackgroundTransparency = 0.2
     Row.Parent = self.Page
 
     local RowCorner = Instance.new("UICorner")
@@ -597,7 +597,7 @@ function AreumUI:CreateSlider(options)
     SliderBar.Size = UDim2.new(1, -28, 0, 8)
     SliderBar.Position = UDim2.new(0, 14, 0, 36)
     SliderBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    SliderBar.BackgroundTransparency = 0.45
+    SliderBar.BackgroundTransparency = 0.2
     SliderBar.AutoButtonColor = false
     SliderBar.Text = ""
     SliderBar.Parent = Row
@@ -609,7 +609,7 @@ function AreumUI:CreateSlider(options)
     local FillBar = Instance.new("Frame")
     FillBar.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
     FillBar.BackgroundColor3 = self.Window.ThemeData.Accent
-    FillBar.BackgroundTransparency = 0.45
+    FillBar.BackgroundTransparency = 0.2
     FillBar.BorderSizePixel = 0
     FillBar.Parent = SliderBar
 
@@ -654,7 +654,7 @@ function AreumUI:CreateInfoBox(options)
     local Row = Instance.new("Frame")
     Row.Size = UDim2.new(1, -24, 0, 42)
     Row.BackgroundColor3 = self.Window.ThemeData.Row
-    Row.BackgroundTransparency = 0.45
+    Row.BackgroundTransparency = 0.2
     Row.Parent = self.Page
 
     local RowCorner = Instance.new("UICorner")
@@ -700,7 +700,7 @@ function AreumUI:CreateDropdown(options)
     local ThemeRow = Instance.new("Frame")
     ThemeRow.Size = UDim2.new(1, -24, 0, 46)
     ThemeRow.BackgroundColor3 = self.Window.ThemeData.Row
-    ThemeRow.BackgroundTransparency = 0.45
+    ThemeRow.BackgroundTransparency = 0.2
     ThemeRow.ClipsDescendants = false
     ThemeRow.ZIndex = 2
     ThemeRow.Parent = self.Page
@@ -730,7 +730,7 @@ function AreumUI:CreateDropdown(options)
     Badge.Position = UDim2.new(1, -14, 0.5, -14)
     Badge.AnchorPoint = Vector2.new(1, 0)
     Badge.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
-    Badge.BackgroundTransparency = 0.45
+    Badge.BackgroundTransparency = 0.2
     Badge.Text = defaultItem .. " ▼"
     Badge.Font = Enum.Font.GothamMedium
     Badge.TextSize = 11
@@ -747,7 +747,7 @@ function AreumUI:CreateDropdown(options)
     DropdownList.Position = UDim2.new(1, -14, 0.5, 16)
     DropdownList.AnchorPoint = Vector2.new(1, 0)
     DropdownList.BackgroundColor3 = self.Window.ThemeData.Row
-    DropdownList.BackgroundTransparency = 0.45
+    DropdownList.BackgroundTransparency = 0.2
     DropdownList.BorderSizePixel = 0
     DropdownList.ScrollBarThickness = 0
     DropdownList.ClipsDescendants = true
