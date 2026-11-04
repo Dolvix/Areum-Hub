@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.296.3"
+local Lversion = "2.296.4"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -608,7 +608,7 @@ SafeZone.Parent = Instances
 SafeZone.Anchored = true
 SafeZone.CanCollide = true
 SafeZone.CastShadow = false
-SafeZone.Size = Vector3.new(10,1,10)
+SafeZone.Size = Vector3.new(30,1,30)
 SafeZone.Position = Vector3.new(10000,10000,10000)
 SafeZone.TopSurface = Enum.SurfaceType.Studs
 SafeZone.BottomSurface = Enum.SurfaceType.Studs
@@ -627,6 +627,7 @@ RunService.RenderStepped:Connect(function()
         Lighting.Ambient = Color3.fromRGB(255, 255, 255) 
         Lighting.Brightness = 5 
         Lighting.GlobalShadows = false 
+        Lighting.ClockTime = 12
         if Lighting:FindFirstChild("Atmosphere") then
             Lighting.Atmosphere.Density = 0 
             Lighting.Atmosphere.Offset = 0 
@@ -743,7 +744,7 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                     
-                    if closestDistance <= 100 then
+                    if closestDistance <= 150 then
                         returnCFrame = hrp.CFrame
                         hrp.CFrame = CFrame.new(SafeZone.Position + Vector3.new(0, 5, 0))
                         lastDodgeTick = currentTime

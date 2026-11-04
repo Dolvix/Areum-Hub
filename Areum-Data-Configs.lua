@@ -20,7 +20,7 @@ Data.Loaders["BTRLoader"] = {
 }
 
 Data.Loaders["UAV_StrikeLoader"] = {
-    Lversion = "2.296.3",
+    Lversion = "2.296.4",
     state = "working",
     load = function()
         local result, err = pcall(function()
