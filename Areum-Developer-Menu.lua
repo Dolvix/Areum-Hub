@@ -2,7 +2,7 @@
 -- AREUM HUB LOADER (Universal Debug Tool - Developer Edition)
 -- =========================================================================
 local Lversion = "DEV-NLY"
-print(`[ Loader Version: v{Lversion} | Universal Modular Mode ]`)
+print(`[ Loader Version: v{Lversion} | Debug Menu ]`)
 
 local env = getfenv(0)
 
@@ -19,6 +19,12 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
+
+if player.DisplayName ~= "Areum" and player.DisplayName ~= "AreumTheBest" then
+    warn("[Areum Hub] Only people with display name 'AreumTheBest' can use this loader!")
+    env.AreumHubExecuted = false
+    return
+end
 
 -- =========================================================================
 -- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
@@ -185,7 +191,7 @@ task.spawn(function()
         local AreumUI = loadstring(game:HttpGet(UIModuleLink))()
         
         local Window = AreumUI:CreateWindow({
-            Title = "Universal Debugger",
+            Title = "Debug Menu",
             Theme = env.CURRENT_THEME,
             ToggleKey = env.UI_TOGGLE_KEY,
             CustomBackground = ConfigManager.Data.CustomAssetURL
@@ -199,16 +205,16 @@ task.spawn(function()
         ToolsTab:CreateSection("Debug Operations ://")
 
         ToolsTab:CreateButton({
-            Name = "Print Workspace Info",
+            Name = "Test Button A1",
             Callback = function()
-                print("[Debug Tool]: Workspace children count -> " .. tostring(#workspace:GetChildren()))
+                print("[Debug Tool]: Button A1 Pressed")
             end
         })
 
         ToolsTab:CreateSlider({
-            Name = "Universal Scale Slider",
-            Min = 0,
-            Max = 100,
+            Name = "Test Value Slider A2",
+            Min = 1,
+            Max = 1234,
             Default = ConfigManager.Data.DebugSliderVal,
             Callback = function(val)
                 ConfigManager.Data.DebugSliderVal = val
@@ -217,7 +223,7 @@ task.spawn(function()
         })
 
         ToolsTab:CreateTextBox({
-            Name = "Console Injector",
+            Name = "Test Input A3",
             Placeholder = "Type code or arguments...",
             Default = ConfigManager.Data.DebugInputText,
             Callback = function(txt)
@@ -228,7 +234,7 @@ task.spawn(function()
         })
 
         ToolsTab:CreateInfoBox({
-            Name = "Environment Status",
+            Name = "Test Info Display A4",
             Text = ConfigManager.Data.InfoDisplay
         })
 
