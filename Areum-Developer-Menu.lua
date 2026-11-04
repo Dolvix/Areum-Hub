@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Universal Debug Tool - Developer Edition)
 -- =========================================================================
-local Lversion = "DEV-NLY"
+local Lversion = "1.000.0"
 print(`[ Loader Version: v{Lversion} | Debug Menu ]`)
 
 local env = getfenv(0)
@@ -26,6 +26,8 @@ if player.DisplayName ~= "Areum" and player.DisplayName ~= "AreumTheBest" then
     return
 end
 
+local HasDrawing = (typeof(Drawing) == "table" and rawget(Drawing, "new") ~= nil) or (typeof(Drawing) == "userdata" or typeof(Drawing) == "function")
+
 -- =========================================================================
 -- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
 -- =========================================================================
@@ -37,10 +39,7 @@ local ConfigManager = {
         ToggleKey = "LeftControl",
         MobileButton = false,
         FetchVersions = false,
-        CustomAssetURL = "",
-        DebugSliderVal = 50,
-        DebugInputText = "",
-        InfoDisplay = "Debug"
+
     }
 }
 
@@ -88,6 +87,16 @@ env.STOP_KEY = Enum.KeyCode.F1
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
+
+env.SPEEDMODIFIFICATIONS = false
+env.JUMPMODIFICATIONS = false
+env.INFJUMP = false
+env.PLAYERESP = false
+env.TRACES = false
+env.DISABLE3DRENDERING = false
+
+env.SPEEDVALUE = 0
+env.JUMPVALUE = 0
 
 local useless_local = false
 local update_shown = false
@@ -202,40 +211,201 @@ task.spawn(function()
         local ConfigTab = Window:CreateTab("Settings", "rbxassetid://18397244060")
         
         -- Tools Tab Components
-        ToolsTab:CreateSection("Debug Operations ://")
+        ToolsTab:CreateSection("External Tools ://")
 
         ToolsTab:CreateButton({
-            Name = "Test Button A1",
+            Name = "Execute Dex Explorer++",
             Callback = function()
-                print("[Debug Tool]: Button A1 Pressed")
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet("https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua"))() 
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Dex Explorer++: " .. tostring(err))
+                end
             end
         })
 
-        ToolsTab:CreateSlider({
-            Name = "Test Value Slider A2",
-            Min = 1,
-            Max = 1234,
-            Default = ConfigManager.Data.DebugSliderVal,
-            Callback = function(val)
-                ConfigManager.Data.DebugSliderVal = val
-                ConfigManager:Save()
+        ToolsTab:CreateButton({
+            Name = "Execute Cobalt UI",
+            Callback = function()
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))()
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Cobalt UI: " .. tostring(err))
+                end
             end
         })
 
-        ToolsTab:CreateTextBox({
-            Name = "Test Input A3",
-            Placeholder = "Type code or arguments...",
-            Default = ConfigManager.Data.DebugInputText,
-            Callback = function(txt)
-                ConfigManager.Data.DebugInputText = txt
-                ConfigManager:Save()
-                print("[Debug Tool Input]: " .. txt)
+        ToolsTab:CreateSection("Universal Scripts ://")
+
+        ToolsTab:CreateButton({
+            Name = "Execute Infinite Yield",
+            Callback = function()
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Infinite Yield: " .. tostring(err))
+                end
             end
         })
 
-        ToolsTab:CreateInfoBox({
-            Name = "Test Info Display A4",
-            Text = ConfigManager.Data.InfoDisplay
+        ToolsTab:CreateButton({
+            Name = "Execute Void UI (WASOR)",
+            Callback = function()
+                local success, err = pcall(function()
+                    if identifyexecutor or printidentity then
+                        game:GetService("GuiService"):SetGameplayPausedNotificationEnabled(false)
+                        loadstring(game:HttpGet(('https://raw.githubusercontent.com/MizunoSync/WASOR/refs/heads/main/github_loader.lua'),true))()
+                    end
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Void UI (WASOR): " .. tostring(err))
+                end
+            end
+        })
+
+        ToolsTab:CreateButton({
+            Name = "Execute Dropkick Script",
+            Callback = function()
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet("https://raw.githubusercontent.com/gsm231/Fe-DropKick/refs/heads/main/V0.1"))()
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Dropkick Script: " .. tostring(err))
+                end
+            end
+        })
+
+        ToolsTab:CreateSection("Management ://")
+
+        ToolsTab:CreateSystemButton({
+            Name = "Load Developer Pack [ Dex++ | Cobalt | Inf Yield ]",
+            Callback = function()
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet("https://github.com/AZYsGithub/DexPlusPlus/releases/latest/download/out.lua"))() 
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Dex Explorer++: " .. tostring(err))
+                end
+
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))()
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Cobalt UI: " .. tostring(err))
+                end
+
+                local success, err = pcall(function()
+                    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+                end)
+
+                if err then
+                    warn("[Areum Hub] Failed to load Infinite Yield: " .. tostring(err))
+                end
+            end
+        })
+
+         ToolsTab:CreateSystemButton({
+            Name = "Install Universal Module [Areum-Hub]",
+            Callback = function()
+                
+                local PlayerTab = Window:CreateTab("Player", "rbxassetid://17769995325")
+                local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://136474990712998")
+
+                PlayerTab:CreateSection("Character Settings ://")
+
+                PlayerTab:CreateToggle({
+                    Name = "Walkspeed Modifications",
+                    Default = false,
+                    Callback = function(state)
+                        env.SPEEDMODIFIFICATIONS = state
+                    end
+                })
+
+                PlayerTab:CreateSlider({
+                    Name = "Set Walkspeed to",
+                    Min = 0,
+                    Max = 200,
+                    Default = 16,
+                    Callback = function(value)
+                        env.SPEEDVALUE = value
+                    end
+                })
+
+                PlayerTab:CreateToggle({
+                    Name = "Jump Power Modifications",
+                    Default = false,
+                    Callback = function(state)
+                        env.JUMPMODIFICATIONS = state
+                    end
+                })
+
+                PlayerTab:CreateSlider({
+                    Name = "Set JumpPower to",
+                    Min = 0,
+                    Max = 300,
+                    Default = 50,
+                    Callback = function(value)
+                        env.JUMPVALUE = value
+                    end
+                })
+
+                 PlayerTab:CreateToggle({
+                    Name = "Infinite Jump",
+                    Default = false,
+                    Callback = function(state)
+                        env.INFJUMP = state
+                    end
+                })
+
+                PlayerTab:CreateButton({
+                    Name = "Reset Character",
+                    Callback = function()
+                        local character = player.Character
+                        if character then
+                            character:BreakJoints()
+                        end
+                    end
+                })
+
+                VisualsTab:CreateSection("Visual Settings ://")
+
+                VisualsTab:CreateToggle({
+                    Name = "Player ESP",
+                    Default = env.PLAYERESP,
+                    Callback = function(state)
+                        env.PLAYERESP = state
+                    end
+                })
+
+                VisualsTab:CreateToggle({
+                    Name = "Traces",
+                    Default = env.TRACES,
+                    Callback = function(state)
+                        env.TRACES = state
+                    end
+                })
+
+                VisualsTab:CreateSection("Rendering ://")
+
+                VisualsTab:CreateToggle({
+                    Name = "Disable 3D Rendering",
+                    Default = env.DISABLE3DRENDERING,
+                    Callback = function(state)
+                        env.DISABLE3DRENDERING = state
+                    end
+                })
+
+            end
         })
 
         -- Settings Tab Components
@@ -243,7 +413,7 @@ task.spawn(function()
         
         ConfigTab:CreateDropdown({
             Name = "Theme Selector",
-            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"},
+            Items = {"Violet", "AreumCoolTheme", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"},
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
@@ -340,6 +510,71 @@ task.spawn(function()
     end
 end)
 
+local ActivePlayerEsps = {}
+local ActivePlayerTracers = {}
+
+local lastSpeedValue = 0
+local lastJumpValue = 0
+
+local function InitESP(targetPlayer: Player)
+    if targetPlayer == player then return end
+
+    local function setupCharacter(character)
+        if ActivePlayerEsps[targetPlayer.Name] then
+            pcall(function() ActivePlayerEsps[targetPlayer.Name]:Destroy() end)
+        end
+
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = character
+        highlight.FillColor = Color3.fromRGB(22, 137, 172)
+        highlight.FillTransparency = 0.75
+        highlight.OutlineColor = Color3.fromRGB(28, 184, 231)
+        highlight.OutlineTransparency = 0
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.Enabled = false
+
+        ActivePlayerEsps[targetPlayer.Name] = highlight
+    end
+
+    if targetPlayer.Character then
+        setupCharacter(targetPlayer.Character)
+    end
+
+    targetPlayer.CharacterAdded:Connect(function(character)
+        setupCharacter(character)
+    end)
+
+    if HasDrawing and not ActivePlayerTracers[targetPlayer.Name] then
+        pcall(function()
+            local tracer = Drawing.new("Line")
+            tracer.Visible = false
+            tracer.Color = Color3.fromRGB(28, 184, 231)
+            tracer.Thickness = 1.5
+            tracer.Transparency = 0.8
+            ActivePlayerTracers[targetPlayer.Name] = tracer
+        end)
+    end
+end
+
+for _, p in ipairs(Players:GetPlayers()) do
+    InitESP(p)
+end
+
+Players.PlayerAdded:Connect(function(p)
+    InitESP(p)
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    if ActivePlayerEsps[p.Name] then
+        pcall(function() ActivePlayerEsps[p.Name]:Destroy() end)
+        ActivePlayerEsps[p.Name] = nil
+    end
+    if ActivePlayerTracers[p.Name] then
+        pcall(function() ActivePlayerTracers[p.Name]:Remove() end)
+        ActivePlayerTracers[p.Name] = nil
+    end
+end)
+
 -- Version Sync Loop
 task.spawn(function()
     while task.wait(15) do
@@ -354,12 +589,92 @@ task.spawn(function()
     end
 end)
 
+task.spawn(function()
+    while task.wait(0.01) do
+        if env.SPEEDMODIFIFICATIONS and env.SCRIPT_ACTIVE then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") then
+                if lastSpeedValue ~= env.SPEEDVALUE then
+                    character.Humanoid.WalkSpeed = env.SPEEDVALUE
+                    lastSpeedValue = env.SPEEDVALUE
+                end
+            end
+        end
+
+        if env.JUMPMODIFIFICATIONS and env.SCRIPT_ACTIVE then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") then
+                if lastJumpValue ~= env.JUMPVALUE then
+                    character.Humanoid.JumpPower = env.JUMPVALUE
+                    lastJumpValue = env.JUMPVALUE
+                end
+            end
+        end
+
+        if env.INFJUMP and env.SCRIPT_ACTIVE then
+            local character = player.Character
+            if character and character:FindFirstChild("Humanoid") then
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end
+
+        for name, esp in pairs(ActivePlayerEsps) do
+            local p = Players:FindFirstChild(name)
+            local shouldShow = env.PLAYERESP and p and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0
+            if esp then
+                esp.Enabled = shouldShow
+            end
+        end
+
+        if HasDrawing and env.SCRIPT_ACTIVE then
+            for name, tracer in pairs(ActivePlayerTracers) do
+                local p = Players:FindFirstChild(name)
+                local shouldShow = false
+
+                if env.TRACES and p and p.Character then
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    local hum = p.Character:FindFirstChild("Humanoid")
+
+                    if hrp and hum and hum.Health > 0 then
+                        local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                        if onScreen then
+                            tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                            tracer.To = Vector2.new(vector.X, vector.Y)
+                            tracer.Visible = true
+                            shouldShow = true
+                        end
+                    end
+                end
+
+                if not shouldShow and tracer then
+                    tracer.Visible = false
+                end
+            end
+        end
+
+        RunService:Set3dRenderingEnabled(not env.DISABLE3DRENDERING)
+
+    end
+end)
+
 -- Cleanup Routine
 local function closeScriptRoutine()
     env.SCRIPT_ACTIVE = false
     env.AreumHubExecuted = false
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
+
+    env.SPEEDMODIFIFICATIONS = false
+    env.JUMPMODIFICATIONS = false
+
+    env.INFJUMP = false
+    env.PLAYERESP = false
+    env.TRACES = false
+    env.DISABLE3DRENDERING = false
+
+    RunService:Set3dRenderingEnabled(true)
 
     setupMobileButton(false)
     
