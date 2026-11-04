@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.296.5"
+local Lversion = "3.296.6"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -473,7 +473,7 @@ local TpPositions = {
     ["Sea"] = CFrame.new(-122.399597, 2.80006003, -384.100037, 1, 5.40566703e-08, 3.0156172e-14, -5.40566703e-08, 1, 3.04135064e-08, -2.85121183e-14, -3.04135064e-08, 1),
     ["SPAAG"] = CFrame.new(400.650085, 2.70006013, -1126.84985, 1, -4.32258389e-08, -4.16284811e-14, 4.32258389e-08, 1, 1.00085291e-08, 4.1195854e-14, -1.00085291e-08, 1),
     ["Town"] = CFrame.new(-329.234802, 2.70006013, -2236.25977, 1, -1.55894997e-09, -4.34150506e-15, 1.55894997e-09, 1, -8.44678283e-08, 4.4731865e-15, 8.44678283e-08, 1),
-    ["SafeZone"] = SafeZone.CFrame + CFrame.new(0, 3, 0)
+    ["SafeZone"] = SafeZone.CFrame + Vector3.new(0, 3, 0)
 }
     
 -- Safe Player Setup
