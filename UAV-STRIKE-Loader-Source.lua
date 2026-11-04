@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.289.4"
+local Lversion = "2.290.1"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -17,6 +17,8 @@ local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local Camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 -- =========================================================================
@@ -73,20 +75,17 @@ function ConfigManager:Save()
     end)
 end
 
--- Load config data safely on startup
 ConfigManager:Load()
 
--- Environment Configuration Defaults (Synced with ConfigManager data)
+-- Environment Configuration Defaults
 env.SCRIPT_ACTIVE = true
 env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.LeftControl
 env.STOP_KEY = Enum.KeyCode.F1
 
--- Configs
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
 
--- Visuals
 env.PLAYERESP = ConfigManager.Data.PlayerEsp
 env.DRONESESP = ConfigManager.Data.DronesEsp
 env.TANKESP = ConfigManager.Data.TankEsp
@@ -101,7 +100,6 @@ local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Ar
 local DataLibraryLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-Data-Configs.lua"
 local LoaderLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/UAV-STRIKE-Loader-Source.lua"
 
--- Mobile Floating Button Management
 local mobileButtonGui = nil
 local onupdate = nil
 local TpFunc = nil
@@ -140,7 +138,7 @@ local function setupMobileButton(enabled)
         btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
         btn.BorderColor3 = Color3.fromRGB(60, 60, 80)
         btn.BorderSizePixel = 1
-        btn.Image = "rbxassetid://18397244060" -- Config tab icon
+        btn.Image = "rbxassetid://18397244060"
         btn.ImageColor3 = Color3.fromRGB(255, 255, 255)
         btn.Parent = screenGui
         
@@ -148,7 +146,6 @@ local function setupMobileButton(enabled)
         corner.CornerRadius = UDim.new(0, 8)
         corner.Parent = btn
         
-        -- Draggable functionality for mobile convenience
         local dragging, dragInput, dragStart, startPos
         btn.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -177,7 +174,6 @@ local function setupMobileButton(enabled)
             end
         end)
         
-        -- Tap / Click to toggle menu visibility
         btn.MouseButton1Click:Connect(function()
             if env.AreumUI then
                 pcall(function()
@@ -213,13 +209,10 @@ task.spawn(function()
         local TeleportsTab = Window:CreateTab("Teleports", "rbxassetid://10629411698")
         local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
 
-        -- Main Tab Controls ------------------------------------------------------------------
         MainTab:CreateSection("Test Tab1 ://")
-       
-        -- Remote Tab Controls ------------------------------------------------------------------
         RemoteTab:CreateSection("Test Tab2 ://")
 
-        -- Visual Tab Controls ------------------------------------------------------------------
+        -- Visual Tab Controls
         VisualsTab:CreateSection("Esp Options ://")
 
         VisualsTab:CreateToggle({
@@ -286,7 +279,7 @@ task.spawn(function()
             end
         })
 
-        -- Teleports Tab Controls ------------------------------------------------------------------
+        -- Teleports Tab Controls
         TeleportsTab:CreateSection("Teleport Options ://")
         TeleportsTab:CreateDropdown({
             Name = "Teleport To Location",
@@ -297,9 +290,7 @@ task.spawn(function()
             end
         })
 
-
-
-        -- Config Tab Controls ------------------------------------------------------------------
+        -- Config Tab Controls
         ConfigTab:CreateSection("Themes ://")
         ConfigTab:CreateDropdown({
             Name = "Theme",
@@ -381,21 +372,15 @@ task.spawn(function()
                 Callback = function()
                     if typeof(env.CloseAreumHub) == "function" then
                         task.delay(1,function()
-                            local result, err = pcall(function()
-                                local AreumUI = loadstring(game:HttpGet(LoaderLink))()
+                            pcall(function()
+                                loadstring(game:HttpGet(LoaderLink))()
                             end)
-
-                            if err then 
-                                warn("[Areum Hub]: Error Received While loading |"..err)
-                            end
                         end)
                         env.CloseAreumHub()
                     end
                 end
             })
-
         end
-
     end)
     
     if not success then
@@ -403,13 +388,13 @@ task.spawn(function()
     end
 end)
 
--- In-Game Stuff
-
-local DronesFolder = workspace.Drones
+-- In-Game Stuff & ESP Tracking Collections
+local DronesFolder = workspace:FindFirstChild("Drones") or workspace
 
 local ActivePlayerEsps = {}
+local ActivePlayerTracers = {}
 local ActiveDroneEsps = {}
--- {"Bunker", "Military B", "Coal P/P", "Oil Storage", "SPAAG", "Town"}
+
 local TpPositions = {
     ["Bunker"] = CFrame.new(-271.4104, -28.2847118, -2093.34888, 1, 0, 0, 0, 1, 0, 0, 0, 1),
     ["Military B"] = CFrame.new(-1436.64355, 3.79980755, -1331.41272, 0.0318882465, 6.29213872e-08, -0.999491453, -3.47737341e-08, 1, 6.18439628e-08, 0.999491453, 3.27839551e-08, 0.0318882465),
@@ -420,153 +405,187 @@ local TpPositions = {
     ["Town"] = CFrame.new(-329.234802, 2.70006013, -2236.25977, 1, -1.55894997e-09, -4.34150506e-15, 1.55894997e-09, 1, -8.44678283e-08, 4.4731865e-15, 8.44678283e-08, 1),
 }
 
--- Other Loops
+local function InitESP(targetPlayer: Player)
+    if targetPlayer == player then return end
 
-local function InitESP(player: Player)
-    local onChar = player.CharacterAdded:Connect(function(character)
+    local function setupCharacter(character)
+        if ActivePlayerEsps[targetPlayer.Name] then
+            pcall(function() ActivePlayerEsps[targetPlayer.Name]:Destroy() end)
+        end
 
         local highlight = Instance.new("Highlight")
         highlight.Parent = character
-
         highlight.FillColor = Color3.fromRGB(22, 137, 172)
         highlight.FillTransparency = 0.75
         highlight.OutlineColor = Color3.fromRGB(28, 184, 231)
         highlight.OutlineTransparency = 0
-
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-
         highlight.Enabled = false
 
-        ActivePlayerEsps[player.Name] = highlight
+        ActivePlayerEsps[targetPlayer.Name] = highlight
+    end
 
+    if targetPlayer.Character then
+        setupCharacter(targetPlayer.Character)
+    end
+
+    targetPlayer.CharacterAdded:Connect(function(character)
+        setupCharacter(character)
     end)
 
-    local onRem = player.CharacterRemoving:Connect(function(character)
-        ActivePlayerEsps[player.Name] = nil
-    end)
-
-    Players.PlayerRemoving:Connect(function(player)
-        if ActivePlayerEsps[player.Name] then
-            onChar:Disconnect()
-            onRem:Disconnect()
-        end
-    end)
-
+    -- Create Drawing line for Tracers if exploit environment supports it
+    if Drawing then
+        pcall(function()
+            local tracer = Drawing.new("Line")
+            tracer.Visible = false
+            tracer.Color = Color3.fromRGB(28, 184, 231)
+            tracer.Thickness = 1.5
+            tracer.Transparency = 0.8
+            ActivePlayerTracers[targetPlayer.Name] = tracer
+        end)
+    end
 end
 
 local function InitDrone(drone: Model)
+    if ActiveDroneEsps[drone] then return end
+
     local highlight = Instance.new("Highlight")
     highlight.Parent = drone
     highlight.FillColor = Color3.fromRGB(167, 0, 0)
     highlight.FillTransparency = 0.75
     highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
     highlight.OutlineTransparency = 0
-
     highlight.Enabled = false
-    
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 
     ActiveDroneEsps[drone] = highlight
+end
 
+-- Initialize already existing players and drones on startup
+for _, p in ipairs(Players:GetPlayers()) do
+    InitESP(p)
+end
+
+Players.PlayerAdded:Connect(function(p)
+    InitESP(p)
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    if ActivePlayerEsps[p.Name] then
+        pcall(function() ActivePlayerEsps[p.Name]:Destroy() end)
+        ActivePlayerEsps[p.Name] = nil
+    end
+    if ActivePlayerTracers[p.Name] then
+        pcall(function() ActivePlayerTracers[p.Name]:Remove() end)
+        ActivePlayerTracers[p.Name] = nil
+    end
+end)
+
+if DronesFolder then
+    for _, d in ipairs(DronesFolder:GetChildren()) do
+        if d:IsA("Model") then
+            InitDrone(d)
+        end
+    end
+
+    DronesFolder.ChildAdded:Connect(function(child)
+        if child:IsA("Model") then
+            InitDrone(child)
+        end
+    end)
+
+    DronesFolder.ChildRemoved:Connect(function(child)
+        if ActiveDroneEsps[child] then
+            pcall(function() ActiveDroneEsps[child]:Destroy() end)
+            ActiveDroneEsps[child] = nil
+        end
+    end)
 end
 
 task.spawn(function()
-
     while task.wait(10) do
         if env.FETCHVERSIONS then
-            local GitHub_Version = loadstring(game:HttpGet(DataLibraryLink))()
-            if GitHub_Version.Loaders.UAV_StrikeLoader.Lversion ~= Lversion then
+            local success, GitHub_Version = pcall(function()
+                return loadstring(game:HttpGet(DataLibraryLink))()
+            end)
+            if success and GitHub_Version and GitHub_Version.Loaders.UAV_StrikeLoader.Lversion ~= Lversion then
                 onupdate(GitHub_Version.Loaders.UAV_StrikeLoader.Lversion)
             end
         end
     end
-    
 end)
 
 task.spawn(function()
-
-    local connectionA0, connectionA1 = nil, nil
-
-    connectionA0 = Players.PlayerAdded:Connect(function()
-        if not env.SCRIPT_ACTIVE then connectionA0:Disconnect() return end
-        InitESP(player)
-    end)
-
-    connectionA1 = Players.PlayerRemoving:Connect(function(player)
-        if not env.SCRIPT_ACTIVE then connectionA1:Disconnect() return end
-        if ActivePlayerEsps[player.Name] then
-            ActivePlayerEsps[player.Name] = nil
-        end
-    end)
-end)
-
-task.spawn(function()
-    
-    local connectionB0, connectionB1 = nil, nil
-
-    connectionB0 = DronesFolder.ChildAdded:Connect(function(drone: Model)
-        if not env.SCRIPT_ACTIVE then connectionB0:Disconnect() return end
-        InitDrone(drone)
-    end)
-
-    connectionB1 = DronesFolder.ChildRemoved:Connect(function(drone)
-        if not env.SCRIPT_ACTIVE then connectionB1:Disconnect() return end
-        ActiveDroneEsps[drone] = nil
-    end)
-
-end)
-
-task.spawn(function()
-    
     TpFunc = function(location)
-        
-        local characater = player.Character or player.CharacterAdded:Wait()
-        local hrp = characater:WaitForChild("HumanoidRootPart")
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
 
-        if hrp and characater and env.SCRIPT_ACTIVE then
+        if hrp and character and env.SCRIPT_ACTIVE then
             hrp.CFrame = TpPositions[location]
         end
     end
-
 end)
 
--- Main Loop
-task.spawn(function()
-    while env.SCRIPT_ACTIVE and task.wait(0.01) do
+-- Main Loop (Handling Fullbright, Highlights, and Screen-Space Tracers)
+RunService.RenderStepped:Connect(function()
+    if not env.SCRIPT_ACTIVE then return end
 
-        -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT 
-
-        if env.FULLBRIGHT and env.SCRIPT_ACTIVE then
-            Lighting.Ambient = Color3.fromRGB(255,255,255) 
-            Lighting.Brightness  = 5 
-            Lighting.GlobalShadows = false 
-            Lighting.ClockTime = 12 
-
+    -- FULLBRIGHT
+    if env.FULLBRIGHT then
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255) 
+        Lighting.Brightness = 5 
+        Lighting.GlobalShadows = false 
+        Lighting.ClockTime = 12 
+        if Lighting:FindFirstChild("Atmosphere") then
             Lighting.Atmosphere.Density = 0 
             Lighting.Atmosphere.Offset = 0 
-
-        elseif not env.FULLBRIGHT and env.SCRIPT_ACTIVE then
-            Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
-            Lighting.GlobalShadows = true
-
+        end
+    else
+        Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
+        Lighting.GlobalShadows = true
+        if Lighting:FindFirstChild("Atmosphere") then
             Lighting.Atmosphere.Density = 0.2
             Lighting.Atmosphere.Offset = 0.25
+        end
+    end
 
+    -- PLAYER ESP HIGHLIGHTS
+    for name, esp in pairs(ActivePlayerEsps) do
+        local p = Players:FindFirstChild(name)
+        local shouldShow = env.PLAYERESP and p and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0
+        esp.Enabled = shouldShow
+    end
+
+    -- DRONE ESP HIGHLIGHTS
+    for drone, esp in pairs(ActiveDroneEsps) do
+        local shouldShow = env.DRONESESP and drone and drone.Parent ~= nil
+        esp.Enabled = shouldShow
+    end
+
+    -- TRACERS LOGIC
+    for name, tracer in pairs(ActivePlayerTracers) do
+        local p = Players:FindFirstChild(name)
+        local shouldShowTracer = false
+
+        if env.TRACES and p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local char = p.Character
+            local hrp = char.HumanoidRootPart
+            local hum = char:FindFirstChild("Humanoid")
+
+            if hum and hum.Health > 0 then
+                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y) -- Origin from bottom center of screen
+                    tracer.To = Vector2.new(vector.X, vector.Y)
+                    tracer.Visible = true
+                    shouldShowTracer = true
+                end
+            end
         end
 
-        -- PLAYER ESP -- PLAYER ESP -- PLAYER ESP  -- PLAYER ESP -- PLAYER ESP 
-
-        for _, esp in pairs(ActivePlayerEsps) do
-            esp.Enabled = (env.PLAYERESP and env.SCRIPT_ACTIVE)
+        if not shouldShowTracer then
+            tracer.Visible = false
         end
-
-        -- DRONES ESP -- DRONES ESP -- DRONES ESP  -- DRONES ESP -- DRONES ESP 
-
-        for _, esp in pairs(ActiveDroneEsps) do
-            esp.Enabled = (env.DRONESESP and env.SCRIPT_ACTIVE)
-        end
-
-
     end
 end)
 
@@ -577,7 +596,6 @@ local function closeScriptRoutine()
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
 
-    -- Visuals
     env.PLAYERESP = false
     env.DRONESESP = false
     env.TANKESP = false
@@ -586,26 +604,32 @@ local function closeScriptRoutine()
     env.FULLBRIGHT = false
 
     for _, esp in pairs(ActivePlayerEsps) do
-        esp.Enabled = false
-        esp = nil
+        pcall(function() esp:Destroy() end)
     end
+    ActivePlayerEsps = {}
+
+    for _, tracer in pairs(ActivePlayerTracers) do
+        pcall(function() tracer:Remove() end)
+    end
+    ActivePlayerTracers = {}
 
     for _, esp in pairs(ActiveDroneEsps) do
-        esp.Enabled = false
-        esp = nil
+        pcall(function() esp:Destroy() end)
     end
+    ActiveDroneEsps = {}
 
     Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
     Lighting.GlobalShadows = true
-    Lighting.Atmosphere.Density = 0.2
-    Lighting.Atmosphere.Offset = 0.25
+    if Lighting:FindFirstChild("Atmosphere") then
+        Lighting.Atmosphere.Density = 0.2
+        Lighting.Atmosphere.Offset = 0.25
+    end
     
     setupMobileButton(false)
     
     if env.AreumUI then
         pcall(function() env.AreumUI:Destroy() end)
     end
-
 end
 env.CloseAreumHub = closeScriptRoutine
 
