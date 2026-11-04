@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.290.1"
+local Lversion = "2.292.1"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -20,6 +20,9 @@ local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
+
+-- Check Executor Drawing Library Availability Safely
+local HasDrawing = (typeof(Drawing) == "table" and rawget(Drawing, "new") ~= nil) or (typeof(Drawing) == "userdata" or typeof(Drawing) == "function")
 
 -- =========================================================================
 -- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
@@ -388,12 +391,13 @@ task.spawn(function()
     end
 end)
 
--- In-Game Stuff & ESP Tracking Collections
+-- In-Game ESP & Tracer Tracking Containers
 local DronesFolder = workspace:FindFirstChild("Drones") or workspace
 
 local ActivePlayerEsps = {}
 local ActivePlayerTracers = {}
 local ActiveDroneEsps = {}
+local ActiveDroneTracers = {}
 
 local TpPositions = {
     ["Bunker"] = CFrame.new(-271.4104, -28.2847118, -2093.34888, 1, 0, 0, 0, 1, 0, 0, 0, 1),
@@ -405,6 +409,7 @@ local TpPositions = {
     ["Town"] = CFrame.new(-329.234802, 2.70006013, -2236.25977, 1, -1.55894997e-09, -4.34150506e-15, 1.55894997e-09, 1, -8.44678283e-08, 4.4731865e-15, 8.44678283e-08, 1),
 }
 
+-- Safe Player Setup
 local function InitESP(targetPlayer: Player)
     if targetPlayer == player then return end
 
@@ -433,8 +438,7 @@ local function InitESP(targetPlayer: Player)
         setupCharacter(character)
     end)
 
-    -- Create Drawing line for Tracers if exploit environment supports it
-    if Drawing then
+    if HasDrawing and not ActivePlayerTracers[targetPlayer.Name] then
         pcall(function()
             local tracer = Drawing.new("Line")
             tracer.Visible = false
@@ -446,7 +450,9 @@ local function InitESP(targetPlayer: Player)
     end
 end
 
+-- Safe Drone Setup
 local function InitDrone(drone: Model)
+    if not drone or not drone:IsA("Model") then return end
     if ActiveDroneEsps[drone] then return end
 
     local highlight = Instance.new("Highlight")
@@ -459,9 +465,20 @@ local function InitDrone(drone: Model)
     highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 
     ActiveDroneEsps[drone] = highlight
+
+    if HasDrawing and not ActiveDroneTracers[drone] then
+        pcall(function()
+            local tracer = Drawing.new("Line")
+            tracer.Visible = false
+            tracer.Color = Color3.fromRGB(255, 50, 50)
+            tracer.Thickness = 1.5
+            tracer.Transparency = 0.8
+            ActiveDroneTracers[drone] = tracer
+        end)
+    end
 end
 
--- Initialize already existing players and drones on startup
+-- Initial Tracking Registrations
 for _, p in ipairs(Players:GetPlayers()) do
     InitESP(p)
 end
@@ -499,6 +516,10 @@ if DronesFolder then
             pcall(function() ActiveDroneEsps[child]:Destroy() end)
             ActiveDroneEsps[child] = nil
         end
+        if ActiveDroneTracers[child] then
+            pcall(function() ActiveDroneTracers[child]:Remove() end)
+            ActiveDroneTracers[child] = nil
+        end
     end)
 end
 
@@ -526,7 +547,7 @@ task.spawn(function()
     end
 end)
 
--- Main Loop (Handling Fullbright, Highlights, and Screen-Space Tracers)
+-- Main RenderStepped Loop
 RunService.RenderStepped:Connect(function()
     if not env.SCRIPT_ACTIVE then return end
 
@@ -553,38 +574,68 @@ RunService.RenderStepped:Connect(function()
     for name, esp in pairs(ActivePlayerEsps) do
         local p = Players:FindFirstChild(name)
         local shouldShow = env.PLAYERESP and p and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0
-        esp.Enabled = shouldShow
+        if esp then
+            esp.Enabled = shouldShow
+        end
     end
 
     -- DRONE ESP HIGHLIGHTS
     for drone, esp in pairs(ActiveDroneEsps) do
-        local shouldShow = env.DRONESESP and drone and drone.Parent ~= nil
-        esp.Enabled = shouldShow
+        local isValid = drone and drone.Parent ~= nil and drone:FindFirstChildWhichIsA("BasePart") ~= nil
+        local shouldShow = env.DRONESESP and isValid
+        if esp then
+            esp.Enabled = shouldShow
+        else
+            ActiveDroneEsps[drone] = nil
+        end
     end
 
-    -- TRACERS LOGIC
-    for name, tracer in pairs(ActivePlayerTracers) do
-        local p = Players:FindFirstChild(name)
-        local shouldShowTracer = false
+    -- PLAYER TRACERS
+    if HasDrawing then
+        for name, tracer in pairs(ActivePlayerTracers) do
+            local p = Players:FindFirstChild(name)
+            local shouldShow = false
 
-        if env.TRACES and p and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local char = p.Character
-            local hrp = char.HumanoidRootPart
-            local hum = char:FindFirstChild("Humanoid")
+            if env.TRACES and p and p.Character then
+                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                local hum = p.Character:FindFirstChild("Humanoid")
 
-            if hum and hum.Health > 0 then
-                local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y) -- Origin from bottom center of screen
-                    tracer.To = Vector2.new(vector.X, vector.Y)
-                    tracer.Visible = true
-                    shouldShowTracer = true
+                if hrp and hum and hum.Health > 0 then
+                    local vector, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    if onScreen then
+                        tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        tracer.To = Vector2.new(vector.X, vector.Y)
+                        tracer.Visible = true
+                        shouldShow = true
+                    end
                 end
+            end
+
+            if not shouldShow and tracer then
+                tracer.Visible = false
             end
         end
 
-        if not shouldShowTracer then
-            tracer.Visible = false
+        -- DRONE TRACERS
+        for drone, tracer in pairs(ActiveDroneTracers) do
+            local shouldShow = false
+
+            if env.TRACES and env.DRONESESP and drone and drone.Parent ~= nil then
+                local targetPart = drone.PrimaryPart or drone:FindFirstChildWhichIsA("BasePart")
+                if targetPart then
+                    local vector, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                    if onScreen then
+                        tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        tracer.To = Vector2.new(vector.X, vector.Y)
+                        tracer.Visible = true
+                        shouldShow = true
+                    end
+                end
+            end
+
+            if not shouldShow and tracer then
+                tracer.Visible = false
+            end
         end
     end
 end)
@@ -617,6 +668,11 @@ local function closeScriptRoutine()
         pcall(function() esp:Destroy() end)
     end
     ActiveDroneEsps = {}
+
+    for _, tracer in pairs(ActiveDroneTracers) do
+        pcall(function() tracer:Remove() end)
+    end
+    ActiveDroneTracers = {}
 
     Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
     Lighting.GlobalShadows = true
