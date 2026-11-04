@@ -42,7 +42,6 @@ local ConfigManager = {
         PlayerEsp = false,
         DronesEsp = false,
         TankEsp = false,
-        ShowName = false,
         Traces  = false,
         Fullbright = false,
         WaterWalking = false,
@@ -101,7 +100,6 @@ env.WATERWALKING = ConfigManager.Data.WaterWalking
 env.PLAYERESP = ConfigManager.Data.PlayerEsp
 env.DRONESESP = ConfigManager.Data.DronesEsp
 env.TANKESP = ConfigManager.Data.TankEsp
-env.SHOWNAME = ConfigManager.Data.ShowName
 env.TRACES = ConfigManager.Data.Traces
 env.FULLBRIGHT = ConfigManager.Data.Fullbright
 
@@ -769,7 +767,6 @@ local function closeScriptRoutine()
     env.PLAYERESP = false
     env.DRONESESP = false
     env.TANKESP = false
-    env.SHOWNAME = false
     env.TRACES = false
     env.FULLBRIGHT = false
 
