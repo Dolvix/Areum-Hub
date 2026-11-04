@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.292.1"
+local Lversion = "2.296.3"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -21,8 +21,12 @@ local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
 
+local Instances = Instance.new("Folder", workspace)
+
 -- Check Executor Drawing Library Availability Safely
 local HasDrawing = (typeof(Drawing) == "table" and rawget(Drawing, "new") ~= nil) or (typeof(Drawing) == "userdata" or typeof(Drawing) == "function")
+
+local ManuallCall01 
 
 -- =========================================================================
 -- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
@@ -41,6 +45,8 @@ local ConfigManager = {
         ShowName = false,
         Traces  = false,
         Fullbright = false,
+        WaterWalking = false,
+        DodgeDrones = false,
     }
 }
 
@@ -88,6 +94,9 @@ env.STOP_KEY = Enum.KeyCode.F1
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
+
+env.DODGEDRONES = ConfigManager.Data.DodgeDrones
+env.WATERWALKING = ConfigManager.Data.WaterWalking
 
 env.PLAYERESP = ConfigManager.Data.PlayerEsp
 env.DRONESESP = ConfigManager.Data.DronesEsp
@@ -211,11 +220,34 @@ task.spawn(function()
         local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://136474990712998")
         local TeleportsTab = Window:CreateTab("Teleports", "rbxassetid://10629411698")
         local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
+        -- Main Tab 
+        MainTab:CreateSection("World ://")
 
-        MainTab:CreateSection("Test Tab1 ://")
+        MainTab:CreateToggle({
+            Name = "Water Walking",
+            Default = env.WATERWALKING,
+            Callback = function(state)
+                env.WATERWALKING = state
+                ConfigManager.Data.WaterWalking = state
+                ManuallCall01()
+                ConfigManager:Save()
+            end
+        })
+
+        MainTab:CreateToggle({
+            Name = "Auto Dodge Drones",
+            Default = env.DODGEDRONES,
+            Callback = function(state)
+                env.DODGEDRONES = state
+                ConfigManager.Data.DodgeDrones = state
+                ConfigManager:Save()
+            end
+        })
+
+        -- Remote Tab
         RemoteTab:CreateSection("Test Tab2 ://")
 
-        -- Visual Tab Controls
+        -- Visual Tab 
         VisualsTab:CreateSection("Esp Options ://")
 
         VisualsTab:CreateToggle({
@@ -524,7 +556,33 @@ if DronesFolder then
 end
 
 task.spawn(function()
-    while task.wait(10) do
+    for _, water in pairs(workspace.World.Sea.SeaModels:GetChildren()) do
+        local p1 = water.Sea
+        if p1 then
+            local WaterWalkPart = Instance.new("Part")
+            WaterWalkPart.Parent = Instances
+            WaterWalkPart.CanCollide = false
+            WaterWalkPart.Transparency = 1
+            WaterWalkPart.Name = "SafeWater"
+            WaterWalkPart.Size = p1.Size
+            WaterWalkPart.Position = p1.Position + Vector3.new(0,3,0)
+            WaterWalkPart.Anchored = true
+            WaterWalkPart.CastShadow = false
+        end
+    end
+end)
+
+ManuallCall01 = function ()
+    for _, SafeWater in pairs(Instances:GetChildren()) do
+        if SafeWater.Name == "SafeWater" then
+            SafeWater.CanCollide = (env.SCRIPT_ACTIVE and env.WATERWALKING)
+        end
+    end
+end
+
+-- 15 Seconds Loop
+task.spawn(function()
+    while task.wait(15) do
         if env.FETCHVERSIONS then
             local success, GitHub_Version = pcall(function()
                 return loadstring(game:HttpGet(DataLibraryLink))()
@@ -536,16 +594,29 @@ task.spawn(function()
     end
 end)
 
-task.spawn(function()
-    TpFunc = function(location)
-        local character = player.Character or player.CharacterAdded:Wait()
-        local hrp = character:WaitForChild("HumanoidRootPart")
+TpFunc = function(location)
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
 
-        if hrp and character and env.SCRIPT_ACTIVE then
-            hrp.CFrame = TpPositions[location]
-        end
-    end
-end)
+     if hrp and character and env.SCRIPT_ACTIVE then
+        hrp.CFrame = TpPositions[location]
+     end
+end
+
+local SafeZone = Instance.new("Part")
+SafeZone.Parent = Instances
+SafeZone.Anchored = true
+SafeZone.CanCollide = true
+SafeZone.CastShadow = false
+SafeZone.Size = Vector3.new(10,1,10)
+SafeZone.Position = Vector3.new(10000,10000,10000)
+SafeZone.TopSurface = Enum.SurfaceType.Studs
+SafeZone.BottomSurface = Enum.SurfaceType.Studs
+
+-- Variables for Auto Dodge Drones Timing & State
+local lastDodgeTick = 0
+local isDodging = false
+local returnCFrame = nil
 
 -- Main RenderStepped Loop
 RunService.RenderStepped:Connect(function()
@@ -556,7 +627,6 @@ RunService.RenderStepped:Connect(function()
         Lighting.Ambient = Color3.fromRGB(255, 255, 255) 
         Lighting.Brightness = 5 
         Lighting.GlobalShadows = false 
-        Lighting.ClockTime = 12 
         if Lighting:FindFirstChild("Atmosphere") then
             Lighting.Atmosphere.Density = 0 
             Lighting.Atmosphere.Offset = 0 
@@ -638,6 +708,51 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
+    -- Auto Dodge Drones Logic
+    if env.DODGEDRONES then
+        local character = player.Character
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if hrp then
+            local currentTime = tick()
+            
+            -- Check if we are currently holding the safe zone timeout
+            if isDodging then
+                if currentTime - lastDodgeTick >= 3 then
+                    isDodging = false
+                    if returnCFrame then
+                        hrp.CFrame = returnCFrame
+                        returnCFrame = nil
+                    end
+                end
+            else
+                -- Cooldown check (0.5s between teleports) and proximity check (within 100 studs)
+                if currentTime - lastDodgeTick >= 0.5 then
+                    local closestDistance = math.huge
+                    
+                    for drone, _ in pairs(ActiveDroneEsps) do
+                        if drone and drone.Parent ~= nil then
+                            local dronePart = drone.PrimaryPart or drone:FindFirstChildWhichIsA("BasePart")
+                            if dronePart then
+                                local distance = (hrp.Position - dronePart.Position).Magnitude
+                                if distance < closestDistance then
+                                    closestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                    
+                    if closestDistance <= 100 then
+                        returnCFrame = hrp.CFrame
+                        hrp.CFrame = CFrame.new(SafeZone.Position + Vector3.new(0, 5, 0))
+                        lastDodgeTick = currentTime
+                        isDodging = true
+                    end
+                end
+            end
+        end
+    end
 end)
 
 -- Cleanup Routine
@@ -646,6 +761,9 @@ local function closeScriptRoutine()
     env.AreumHubExecuted = false
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
+
+    env.DODGEDRONES = false
+    env.WATERWALKING = false
 
     env.PLAYERESP = false
     env.DRONESESP = false
