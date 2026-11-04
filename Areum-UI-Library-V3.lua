@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM UI LIBRARY (Universal Modular Edition v2.040.0)
+-- AREUM UI LIBRARY (Universal Modular Edition v3.001.1)
 -- =========================================================================
-print("[ UI Library Version: 3.001.1 [IN-DEV] | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.001.2 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -115,9 +115,12 @@ function AreumUI:CreateWindow(config)
     MainStroke.Color = window.ThemeData.Stroke
     MainStroke.Parent = MainFrame
 
-    -- Background 2-Color Gradient Support
+    -- Background 2-Color Gradient Support (Fixed with Keypoints)
     local BgGradient = Instance.new("UIGradient")
-    BgGradient.Color = ColorSequence.new(window.ThemeData.BackgroundGradient)
+    BgGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, window.ThemeData.BackgroundGradient[1]),
+        ColorSequenceKeypoint.new(1, window.ThemeData.BackgroundGradient[2])
+    })
     BgGradient.Rotation = 45
     BgGradient.Parent = MainFrame
 
