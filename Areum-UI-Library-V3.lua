@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM UI LIBRARY (Universal Modular Edition v3.002.0)
+-- AREUM UI LIBRARY (Debug Tool - Private Version)
 -- =========================================================================
-print("[ UI Library Version: 3.004.1 | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.004.2 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -130,7 +130,8 @@ function AreumUI:CreateWindow(config)
     BgImage.Size = UDim2.new(1, 0, 1, 0)
     BgImage.BackgroundTransparency = 1
     BgImage.ScaleType = Enum.ScaleType.Crop
-    BgImage.ImageTransparency = 0.1
+    BgImage.ImageTransparency = 0
+    BgImage.ImageColor3 = Color3.fromRGB(167, 167, 167)
     BgImage.Parent = MainFrame
     window.BgImage = BgImage
 
@@ -148,7 +149,7 @@ function AreumUI:CreateWindow(config)
             end
         end)
         if BgImage.Image == "" or not pcall(function() local test = BgImage.Image end) then
-             BgImage.Image = Themes.Violet.BackgroundImage -- ultimate fallback
+             BgImage.Image = Themes.Violet.BackgroundImage 
         end
     end
 
@@ -185,7 +186,7 @@ function AreumUI:CreateWindow(config)
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
     Sidebar.BackgroundColor3 = window.ThemeData.Sidebar
-    Sidebar.BackgroundTransparency = 0.75
+    Sidebar.BackgroundTransparency = 0.5
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = MainFrame
 
