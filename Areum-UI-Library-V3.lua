@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Debug Tool - Private Version)
 -- =========================================================================
-print("[ UI Library Version: 3.005.2 | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.005.3 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -61,10 +61,10 @@ local Themes = {
     Sakura = {
         BackgroundGradient = {Color3.fromRGB(255, 114, 255), Color3.fromRGB(253, 202, 255)},
         Sidebar = Color3.fromRGB(182, 101, 182),
-        Row = Color3.fromRGB(128, 54, 115),
-        Stroke = Color3.fromRGB(128, 54, 115),
-        Accent = Color3.fromRGB(255, 96, 202),
-        TextMuted = Color3.fromRGB(219, 116, 206),
+        Row = Color3.fromRGB(121, 60, 36),
+        Stroke = Color3.fromRGB(255, 130, 232),
+        Accent = Color3.fromRGB(255, 197, 236),
+        TextMuted = Color3.fromRGB(158, 120, 153),
         BackgroundImage = "rbxassetid://17070917034"
     },
     Void = {
@@ -74,7 +74,7 @@ local Themes = {
         Stroke = Color3.fromRGB(8, 8, 8),
         Accent = Color3.fromRGB(255, 255, 255),
         TextMuted = Color3.fromRGB(168, 168, 168),
-        BackgroundImage = "rbxassetid://129608643724853"
+        BackgroundImage = "rbxassetid://116918868807246"
     },
 }
 
