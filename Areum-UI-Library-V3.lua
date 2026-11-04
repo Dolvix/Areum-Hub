@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM UI LIBRARY (Debug Tool - Private Version v3.007.0)
 -- =========================================================================
-print("[ UI Library Version: 3.007.1 | Supports Loader Versions From 3.000.0 ]")
+print("[ UI Library Version: 3.007.2 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -74,7 +74,7 @@ local Themes = {
         Stroke = Color3.fromRGB(8, 8, 8),
         Accent = Color3.fromRGB(255, 255, 255),
         TextMuted = Color3.fromRGB(168, 168, 168),
-        BackgroundImage = "rbxassetid://14731252126"
+        BackgroundImage = "rbxassetid://128985227018816"
     },
 }
 
