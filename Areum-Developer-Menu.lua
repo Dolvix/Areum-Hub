@@ -263,6 +263,8 @@ task.spawn(function()
             Callback = function(assetId)
                 ConfigManager.Data.CustomAssetURL = assetId
                 ConfigManager:Save()
+
+                Window:UpdateBackground(assetId)
             end
         })
 
