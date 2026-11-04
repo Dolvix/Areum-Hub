@@ -1,8 +1,8 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.296.5"
-print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
+local Lversion = "3.296.5"
+print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
 
@@ -10,6 +10,7 @@ if env.AreumHubExecuted == true then
     warn("[Areum Hub] Hub is already running!")
     return
 end
+
 env.AreumHubExecuted = true
 
 local UserInputService = game:GetService("UserInputService")
@@ -37,15 +38,19 @@ local ConfigManager = {
     Data = {
         CurrentTheme = "Violet",
         ToggleKey = "LeftControl",
+        CustomAssetURL = "",
         MobileButton = false,
         FetchVersions = false,
+
         PlayerEsp = false,
         DronesEsp = false,
         TankEsp = false,
         Traces  = false,
         Fullbright = false,
+
         WaterWalking = false,
         DodgeDrones = false,
+        DodgeDronesDistance = 200,
     }
 }
 
@@ -95,6 +100,7 @@ env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
 
 env.DODGEDRONES = ConfigManager.Data.DodgeDrones
+env.DODGEDRONESDISTANCE = ConfigManager.Data.DodgeDronesDistance
 env.WATERWALKING = ConfigManager.Data.WaterWalking
 
 env.PLAYERESP = ConfigManager.Data.PlayerEsp
@@ -209,7 +215,8 @@ task.spawn(function()
         local Window = AreumUI:CreateWindow({
             Title = "Areum Hub",
             Theme = env.CURRENT_THEME,
-            ToggleKey = env.UI_TOGGLE_KEY
+            ToggleKey = env.UI_TOGGLE_KEY,
+            CustomBackground = ConfigManager.Data.CustomAssetURL
         })
         env.AreumUI = Window
 
@@ -238,6 +245,18 @@ task.spawn(function()
             Callback = function(state)
                 env.DODGEDRONES = state
                 ConfigManager.Data.DodgeDrones = state
+                ConfigManager:Save()
+            end
+        })
+
+        MainTab:CreateSlider({
+            Name = "Drones Dodge Distance",
+            Min = 10,
+            Max = 500,
+            Default = ConfigManager.Data.DodgeDronesDistance,
+            Callback = function(val)
+                env.DODGEDRONESDISTANCE = val
+                ConfigManager.Data.DodgeDronesDistance = val
                 ConfigManager:Save()
             end
         })
@@ -281,16 +300,6 @@ task.spawn(function()
         VisualsTab:CreateSection("Esp Configs ://")
 
         VisualsTab:CreateToggle({
-            Name = "Show Player's Name",
-            Default = env.SHOWNAME,
-            Callback = function(state)
-                env.SHOWNAME = state
-                ConfigManager.Data.ShowName = state
-                ConfigManager:Save()
-            end
-        })
-
-        VisualsTab:CreateToggle({
             Name = "Traces",
             Default = env.TRACES,
             Callback = function(state)
@@ -323,11 +332,19 @@ task.spawn(function()
             end
         })
 
+        TeleportsTab:CreateButton({
+            Name = "Teleport To Safe Zone",
+            Callback = function()
+                TpFunc("SafeZone")
+            end
+        })
+
         -- Config Tab Controls
-        ConfigTab:CreateSection("Themes ://")
+        ConfigTab:CreateSection("Theme Customization ://")
+
         ConfigTab:CreateDropdown({
-            Name = "Theme",
-            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Light"},
+            Name = "Selected Theme",
+            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"},
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
@@ -343,6 +360,18 @@ task.spawn(function()
                         loadstring(game:HttpGet(LoaderLink))()
                     end)
                 end)
+            end
+        })
+
+        ConfigTab:CreateTextBox({
+            Name = "Custom Background ID",
+            Placeholder = "rbxassetid://...",
+            Default = ConfigManager.Data.CustomAssetURL,
+            Callback = function(assetId)
+                ConfigManager.Data.CustomAssetURL = assetId
+                ConfigManager:Save()
+
+                Window:UpdateBackground(assetId)
             end
         })
 
@@ -371,8 +400,8 @@ task.spawn(function()
             end
         })
 
-        ConfigTab:CreateButton({
-            Name = "Kill Loader (F1)",
+        ConfigTab:CreateSystemButton({
+            Name = "Kill Loader [Press F1]",
             Callback = function()
                 if typeof(env.CloseAreumHub) == "function" then
                     env.CloseAreumHub()
@@ -392,16 +421,13 @@ task.spawn(function()
 
             UpdateTab:CreateSection("Update News ://")
 
-            UpdateTab:CreateToggle({
-                Name = `New Version Detected | v.{newver}`,
-                Default = useless_local,
-                Callback = function(state)
-                    useless_local = state
-                end
+            UpdateTab:CreateInfoBox({
+                Name = "New Version Detected",
+                Text = `v.{newver}`
             })
 
             UpdateTab:CreateButton({
-                Name = "Load into New Version | v."..newver,
+                Name = "Load into New Version",
                 Callback = function()
                     if typeof(env.CloseAreumHub) == "function" then
                         task.delay(1,function()
@@ -429,6 +455,16 @@ local ActivePlayerTracers = {}
 local ActiveDroneEsps = {}
 local ActiveDroneTracers = {}
 
+local SafeZone = Instance.new("Part")
+SafeZone.Parent = Instances
+SafeZone.Anchored = true
+SafeZone.CanCollide = true
+SafeZone.CastShadow = false
+SafeZone.Size = Vector3.new(60,1,60)
+SafeZone.Position = Vector3.new(10000,10000,10000)
+SafeZone.TopSurface = Enum.SurfaceType.Studs
+SafeZone.BottomSurface = Enum.SurfaceType.Studs
+
 local TpPositions = {
     ["Bunker"] = CFrame.new(-271.4104, -28.2847118, -2093.34888, 1, 0, 0, 0, 1, 0, 0, 0, 1),
     ["Military B"] = CFrame.new(-1436.64355, 3.79980755, -1331.41272, 0.0318882465, 6.29213872e-08, -0.999491453, -3.47737341e-08, 1, 6.18439628e-08, 0.999491453, 3.27839551e-08, 0.0318882465),
@@ -437,8 +473,9 @@ local TpPositions = {
     ["Sea"] = CFrame.new(-122.399597, 2.80006003, -384.100037, 1, 5.40566703e-08, 3.0156172e-14, -5.40566703e-08, 1, 3.04135064e-08, -2.85121183e-14, -3.04135064e-08, 1),
     ["SPAAG"] = CFrame.new(400.650085, 2.70006013, -1126.84985, 1, -4.32258389e-08, -4.16284811e-14, 4.32258389e-08, 1, 1.00085291e-08, 4.1195854e-14, -1.00085291e-08, 1),
     ["Town"] = CFrame.new(-329.234802, 2.70006013, -2236.25977, 1, -1.55894997e-09, -4.34150506e-15, 1.55894997e-09, 1, -8.44678283e-08, 4.4731865e-15, 8.44678283e-08, 1),
+    ["SafeZone"] = SafeZone.CFrame + CFrame.new(0, 3, 0)
 }
-
+    
 -- Safe Player Setup
 local function InitESP(targetPlayer: Player)
     if targetPlayer == player then return end
@@ -601,16 +638,6 @@ TpFunc = function(location)
      end
 end
 
-local SafeZone = Instance.new("Part")
-SafeZone.Parent = Instances
-SafeZone.Anchored = true
-SafeZone.CanCollide = true
-SafeZone.CastShadow = false
-SafeZone.Size = Vector3.new(60,1,60)
-SafeZone.Position = Vector3.new(10000,10000,10000)
-SafeZone.TopSurface = Enum.SurfaceType.Studs
-SafeZone.BottomSurface = Enum.SurfaceType.Studs
-
 -- Variables for Auto Dodge Drones Timing & State
 local lastDodgeTick = 0
 local isDodging = false
@@ -742,7 +769,7 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                     
-                    if closestDistance <= 200 then
+                    if closestDistance <= env.DODGEDRONESDISTANCE then
                         returnCFrame = hrp.CFrame
                         hrp.CFrame = CFrame.new(SafeZone.Position + Vector3.new(0, 5, 0))
                         lastDodgeTick = currentTime

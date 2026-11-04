@@ -1,7 +1,7 @@
 -- =========================================================================
--- AREUM UI LIBRARY (Universal Modular Edition)
+-- AREUM UI LIBRARY (Debug Tool - Private Version v3.007.0)
 -- =========================================================================
-print("[ UI Library Version: 2.033.4 | Supports Loader Versions From 2.000.0 ]")
+print("[ UI Library Version: 3.007.2 | Supports Loader Versions From 3.000.0 ]")
 
 local AreumUI = {}
 AreumUI.__index = AreumUI
@@ -14,46 +14,81 @@ local RunService = game:GetService("RunService")
 -- Global Themes Palette
 local Themes = {
     Violet = {
-        Background = Color3.fromRGB(12, 12, 12),
+        BackgroundGradient = {Color3.fromRGB(18, 10, 26), Color3.fromRGB(8, 6, 12)},
         Sidebar = Color3.fromRGB(7, 7, 7),
         Row = Color3.fromRGB(18, 18, 18),
         Stroke = Color3.fromRGB(24, 0, 34),
         Accent = Color3.fromRGB(118, 0, 214),
-        TextMuted = Color3.fromRGB(150, 150, 150)
+        TextMuted = Color3.fromRGB(150, 150, 150),
+        BackgroundImage = "rbxassetid://14731252126"
     },
     Xmas = {
-        Background = Color3.fromRGB(1, 27, 0),
-        Sidebar = Color3.fromRGB(59, 0, 0),
-        Row = Color3.fromRGB(59, 0, 0),
+        BackgroundGradient = {Color3.fromRGB(2, 35, 2), Color3.fromRGB(1, 15, 1)},
+        Sidebar = Color3.fromRGB(45, 0, 0),
+        Row = Color3.fromRGB(45, 0, 0),
         Stroke = Color3.fromRGB(64, 87, 0),
         Accent = Color3.fromRGB(27, 216, 2),
-        TextMuted = Color3.fromRGB(2, 114, 11)
+        TextMuted = Color3.fromRGB(2, 114, 11),
+        BackgroundImage = "rbxassetid://15769220526"
     },
     Ocean = {
-        Background = Color3.fromRGB(10, 14, 20),
+        BackgroundGradient = {Color3.fromRGB(12, 22, 36), Color3.fromRGB(5, 9, 14)},
         Sidebar = Color3.fromRGB(6, 9, 14),
         Row = Color3.fromRGB(16, 22, 32),
         Stroke = Color3.fromRGB(28, 42, 64),
         Accent = Color3.fromRGB(60, 160, 255),
-        TextMuted = Color3.fromRGB(140, 165, 200)
+        TextMuted = Color3.fromRGB(140, 165, 200),
+        BackgroundImage = "rbxassetid://9544622638"
     },
     Crimson = {
-        Background = Color3.fromRGB(16, 10, 10),
+        BackgroundGradient = {Color3.fromRGB(28, 12, 12), Color3.fromRGB(10, 5, 5)},
         Sidebar = Color3.fromRGB(10, 6, 6),
         Row = Color3.fromRGB(26, 16, 16),
         Stroke = Color3.fromRGB(52, 28, 28),
         Accent = Color3.fromRGB(255, 85, 85),
-        TextMuted = Color3.fromRGB(200, 150, 150)
+        TextMuted = Color3.fromRGB(200, 150, 150),
+        BackgroundImage = "rbxassetid://92523071261344"
     },
-    Light = {
-        Background = Color3.fromRGB(247, 245, 245),
-        Sidebar = Color3.fromRGB(168, 167, 167),
-        Row = Color3.fromRGB(107, 107, 107),
-        Stroke = Color3.fromRGB(32, 32, 32),
-        Accent = Color3.fromRGB(177, 176, 176),
-        TextMuted = Color3.fromRGB(68, 68, 68)
+    Noise = {
+        BackgroundGradient = {Color3.fromRGB(250, 250, 250), Color3.fromRGB(168, 168, 168)},
+        Sidebar = Color3.fromRGB(199, 199, 199),
+        Row = Color3.fromRGB(146, 146, 146),
+        Stroke = Color3.fromRGB(5, 5, 5),
+        Accent = Color3.fromRGB(102, 102, 102),
+        TextMuted = Color3.fromRGB(68, 68, 68),
+        BackgroundImage = "rbxassetid://79071105946443"
+    },
+    Sakura = {
+        BackgroundGradient = {Color3.fromRGB(255, 114, 255), Color3.fromRGB(253, 202, 255)},
+        Sidebar = Color3.fromRGB(182, 101, 182),
+        Row = Color3.fromRGB(143, 38, 38),
+        Stroke = Color3.fromRGB(197, 70, 70),
+        Accent = Color3.fromRGB(255, 197, 236),
+        TextMuted = Color3.fromRGB(158, 120, 153),
+        BackgroundImage = "rbxassetid://17070917034"
+    },
+    Void = {
+        BackgroundGradient = {Color3.fromRGB(17, 17, 17), Color3.fromRGB(0, 0, 0)},
+        Sidebar = Color3.fromRGB(8, 8, 8),
+        Row = Color3.fromRGB(12, 12, 12),
+        Stroke = Color3.fromRGB(8, 8, 8),
+        Accent = Color3.fromRGB(255, 255, 255),
+        TextMuted = Color3.fromRGB(168, 168, 168),
+        BackgroundImage = "rbxassetid://128985227018816"
     },
 }
+
+-- Helper function to format input IDs cleanly into valid rbxassetids
+local function formatAssetId(input)
+    if not input or input == "" then return "" end
+    input = tostring(input):gsub("%s+", "")
+    if tonumber(input) then
+        return "rbxassetid://" .. input
+    elseif not input:find("rbxassetid://") then
+        return "rbxassetid://" .. input:match("%d+")
+    end
+    return input
+end
 
 -- 1. Library Initialization (CreateWindow)
 function AreumUI:CreateWindow(config)
@@ -65,12 +100,16 @@ function AreumUI:CreateWindow(config)
     window.ToggleKey = config.ToggleKey or Enum.KeyCode.LeftControl
     window.ThemeData = Themes[window.CurrentThemeName] or Themes.Violet
     
+    local initialBg = window.ThemeData.BackgroundImage
+    if config.CustomBackground and config.CustomBackground ~= "" then
+        initialBg = formatAssetId(config.CustomBackground)
+    end
+
     window.Pages = {}
     window.TabButtons = {}
     window.ActiveTab = nil
     window.Connections = {}
 
-    -- Parent target handling with safe fallback
     local targetParent = CoreGui
     pcall(function()
         if typeof(gethui) == "function" then
@@ -78,7 +117,6 @@ function AreumUI:CreateWindow(config)
         end
     end)
 
-    -- ScreenGui Setup
     local ScreenGui = Instance.new("ScreenGui")
     ScreenGui.Name = "AreumHub_Universal"
     ScreenGui.ResetOnSpawn = false
@@ -89,12 +127,11 @@ function AreumUI:CreateWindow(config)
     ScreenGui.Parent = targetParent
     window.ScreenGui = ScreenGui
 
-    -- Main Frame
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 560, 0, 380)
-    MainFrame.Position = UDim2.new(0.5, -280, 0.5, -190)
-    MainFrame.BackgroundColor3 = window.ThemeData.Background
+    MainFrame.Size = UDim2.new(0, 580, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -290, 0.5, -200)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     MainFrame.BorderSizePixel = 0
     MainFrame.Active = true
     MainFrame.Parent = ScreenGui
@@ -108,6 +145,42 @@ function AreumUI:CreateWindow(config)
     MainStroke.Thickness = 1.5
     MainStroke.Color = window.ThemeData.Stroke
     MainStroke.Parent = MainFrame
+
+    -- Background 2-Color Gradient Support
+    local BgGradient = Instance.new("UIGradient")
+    BgGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, window.ThemeData.BackgroundGradient[1]),
+        ColorSequenceKeypoint.new(1, window.ThemeData.BackgroundGradient[2])
+    })
+    BgGradient.Rotation = 45
+    BgGradient.Parent = MainFrame
+
+    -- Background Image Layer with Slight Dark Tint (Color3.fromRGB(120, 120, 120))
+    local BgImage = Instance.new("ImageLabel")
+    BgImage.Name = "BackgroundImage"
+    BgImage.Size = UDim2.new(1, 0, 1, 0)
+    BgImage.BackgroundTransparency = 1
+    BgImage.ScaleType = Enum.ScaleType.Stretch
+    BgImage.ImageTransparency = 0.15
+    BgImage.ImageColor3 = Color3.fromRGB(200,200,200)
+    BgImage.Parent = MainFrame
+    window.BgImage = BgImage
+
+    local ImageCorner = Instance.new("UICorner")
+    ImageCorner.CornerRadius = UDim.new(0, 12)
+    ImageCorner.Parent = BgImage
+
+    -- Function to safely load and instantly update background anywhere
+    function window:UpdateBackground(assetInput)
+        local formatted = formatAssetId(assetInput)
+        if formatted == "" then
+            formatted = window.ThemeData.BackgroundImage
+        end
+        
+        BgImage.Image = formatted
+    end
+
+    window:UpdateBackground(initialBg)
 
     -- Custom Smooth Dragging (Supports Touch & Mouse)
     local dragging, dragInput, dragStart, startPos
@@ -135,11 +208,12 @@ function AreumUI:CreateWindow(config)
         end
     end))
 
-    -- Sidebar Setup
+    -- Sidebar Setup 
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
     Sidebar.BackgroundColor3 = window.ThemeData.Sidebar
+    Sidebar.BackgroundTransparency = 0.75
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = MainFrame
 
@@ -186,7 +260,6 @@ function AreumUI:CreateWindow(config)
     ContentFrame.Parent = MainFrame
     window.ContentFrame = ContentFrame
 
-    -- Global Visibility Bind
     table.insert(window.Connections, UserInputService.InputBegan:Connect(function(input, gpe)
         if not gpe and input.KeyCode == window.ToggleKey then
             MainFrame.Visible = not MainFrame.Visible
@@ -196,7 +269,6 @@ function AreumUI:CreateWindow(config)
     return window
 end
 
--- Toggle visibility programmatically for mobile floating buttons
 function AreumUI:Toggle()
     if self.MainFrame then
         self.MainFrame.Visible = not self.MainFrame.Visible
@@ -232,6 +304,7 @@ function AreumUI:CreateTab(name, iconAssetId)
     Btn.Size = UDim2.new(1, -12, 0, 40)
     Btn.Position = UDim2.new(0, 6, 0, 0)
     Btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    Btn.BackgroundTransparency = 0.45
     Btn.Text = "          " .. name
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 14
@@ -278,17 +351,19 @@ function AreumUI:SelectTab(name)
         local icon = btn:FindFirstChild("Icon")
         if btnName == name then
             btn.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+            btn.BackgroundTransparency = 0.45
             btn.TextColor3 = self.ThemeData.Accent
             if icon then icon.ImageColor3 = self.ThemeData.Accent end
         else
             btn.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+            btn.BackgroundTransparency = 0.45
             btn.TextColor3 = self.ThemeData.TextMuted
             if icon then icon.ImageColor3 = self.ThemeData.TextMuted end
         end
     end
 end
 
--- 3. Section Creation (CreateSection)
+-- 3. Section Creation
 function AreumUI:CreateSection(titleText)
     local SectionLabel = Instance.new("TextLabel")
     SectionLabel.Size = UDim2.new(1, -24, 0, 24)
@@ -296,13 +371,13 @@ function AreumUI:CreateSection(titleText)
     SectionLabel.BackgroundTransparency = 1
     SectionLabel.Text = titleText:upper()
     SectionLabel.Font = Enum.Font.GothamMedium
-    SectionLabel.TextSize = 14
+    SectionLabel.TextSize = 13
     SectionLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
     SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
     SectionLabel.Parent = self.Page
 end
 
--- 4. Component Creation (Toggle, Button, Dropdown)
+-- 4. Components Implementation
 function AreumUI:CreateToggle(options)
     options = options or {}
     local name = options.Name or "Toggle"
@@ -310,8 +385,9 @@ function AreumUI:CreateToggle(options)
     local callback = options.Callback or function() end
 
     local Row = Instance.new("Frame")
-    Row.Size = UDim2.new(1, -24, 0, 50)
+    Row.Size = UDim2.new(1, -24, 0, 46)
     Row.BackgroundColor3 = self.Window.ThemeData.Row
+    Row.BackgroundTransparency = 0.45
     Row.Parent = self.Page
 
     local RowCorner = Instance.new("UICorner")
@@ -329,7 +405,7 @@ function AreumUI:CreateToggle(options)
     RowText.BackgroundTransparency = 1
     RowText.Text = name
     RowText.Font = Enum.Font.GothamMedium
-    RowText.TextSize = 15
+    RowText.TextSize = 14
     RowText.TextColor3 = Color3.fromRGB(220, 220, 220)
     RowText.TextXAlignment = Enum.TextXAlignment.Left
     RowText.Parent = Row
@@ -339,6 +415,7 @@ function AreumUI:CreateToggle(options)
     SwitchBG.Position = UDim2.new(1, -14, 0.5, -12)
     SwitchBG.AnchorPoint = Vector2.new(1, 0)
     SwitchBG.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SwitchBG.BackgroundTransparency = 0.45
     SwitchBG.Text = ""
     SwitchBG.Parent = Row
 
@@ -350,6 +427,7 @@ function AreumUI:CreateToggle(options)
     SwitchBall.Size = UDim2.new(0, 18, 0, 18)
     SwitchBall.Position = UDim2.new(0, 3, 0.5, -9)
     SwitchBall.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
+    SwitchBall.BackgroundTransparency = 0.45
     SwitchBall.Parent = SwitchBG
 
     local BallCorner = Instance.new("UICorner")
@@ -381,11 +459,41 @@ function AreumUI:CreateButton(options)
     local callback = options.Callback or function() end
 
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, -24, 0, 44)
-    Btn.BackgroundColor3 = Color3.fromRGB(24, 12, 12)
+    Btn.Size = UDim2.new(1, -24, 0, 40)
+    Btn.BackgroundColor3 = self.Window.ThemeData.Row
+    Btn.BackgroundTransparency = 0.45
     Btn.Text = name
     Btn.Font = Enum.Font.GothamMedium
-    Btn.TextSize = 12
+    Btn.TextSize = 13
+    Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+    Btn.Parent = self.Page
+
+    local BtnCorner = Instance.new("UICorner")
+    BtnCorner.CornerRadius = UDim.new(0, 8)
+    BtnCorner.Parent = Btn
+
+    local BtnStroke = Instance.new("UIStroke")
+    BtnStroke.Thickness = 1
+    BtnStroke.Color = self.Window.ThemeData.Stroke
+    BtnStroke.Parent = Btn
+
+    Btn.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+end
+
+function AreumUI:CreateSystemButton(options)
+    options = options or {}
+    local name = options.Name or "System Action"
+    local callback = options.Callback or function() end
+
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, -24, 0, 40)
+    Btn.BackgroundColor3 = Color3.fromRGB(24, 12, 12)
+    Btn.BackgroundTransparency = 0.45
+    Btn.Text = name
+    Btn.Font = Enum.Font.GothamMedium
+    Btn.TextSize = 13
     Btn.TextColor3 = Color3.fromRGB(255, 100, 100)
     Btn.Parent = self.Page
 
@@ -403,6 +511,211 @@ function AreumUI:CreateButton(options)
     end)
 end
 
+function AreumUI:CreateTextBox(options)
+    options = options or {}
+    local name = options.Name or "TextBox"
+    local placeholder = options.Placeholder or "Enter text..."
+    local defaultText = options.Default or ""
+    local callback = options.Callback or function() end
+
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -24, 0, 50)
+    Row.BackgroundColor3 = self.Window.ThemeData.Row
+    Row.BackgroundTransparency = 0.45
+    Row.Parent = self.Page
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 8)
+    RowCorner.Parent = Row
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Thickness = 1
+    RowStroke.Color = self.Window.ThemeData.Stroke
+    RowStroke.Parent = Row
+
+    local RowText = Instance.new("TextLabel")
+    RowText.Size = UDim2.new(0.45, 0, 1, 0)
+    RowText.Position = UDim2.new(0, 14, 0, 0)
+    RowText.BackgroundTransparency = 1
+    RowText.Text = name
+    RowText.Font = Enum.Font.GothamMedium
+    RowText.TextSize = 13
+    RowText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    RowText.TextXAlignment = Enum.TextXAlignment.Left
+    RowText.Parent = Row
+
+    local BoxInput = Instance.new("TextBox")
+    BoxInput.Size = UDim2.new(0, 150, 0, 30)
+    BoxInput.Position = UDim2.new(1, -14, 0.5, -15)
+    BoxInput.AnchorPoint = Vector2.new(1, 0)
+    BoxInput.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    BoxInput.BackgroundTransparency = 0.45
+    BoxInput.Text = defaultText
+    BoxInput.PlaceholderText = placeholder
+    BoxInput.Font = Enum.Font.GothamMedium
+    BoxInput.TextSize = 12
+    BoxInput.TextColor3 = Color3.fromRGB(240, 240, 240)
+    BoxInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    BoxInput.ClearTextOnFocus = false
+    BoxInput.Parent = Row
+
+    local BoxCorner = Instance.new("UICorner")
+    BoxCorner.CornerRadius = UDim.new(0, 6)
+    BoxCorner.Parent = BoxInput
+
+    BoxInput.FocusLost:Connect(function(enterPressed)
+        pcall(callback, BoxInput.Text)
+        if name:lower().match("background") or name:lower().match("url") or name:lower().match("asset") then
+            self:UpdateBackground(BoxInput.Text)
+        end
+    end)
+end
+
+function AreumUI:CreateSlider(options)
+    options = options or {}
+    local name = options.Name or "Slider"
+    local min = options.Min or 0
+    local max = options.Max or 100
+    local default = options.Default or min
+    local callback = options.Callback or function() end
+
+    local currentValue = math.clamp(default, min, max)
+
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -24, 0, 56)
+    Row.BackgroundColor3 = self.Window.ThemeData.Row
+    Row.BackgroundTransparency = 0.45
+    Row.Parent = self.Page
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 8)
+    RowCorner.Parent = Row
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Thickness = 1
+    RowStroke.Color = self.Window.ThemeData.Stroke
+    RowStroke.Parent = Row
+
+    local RowText = Instance.new("TextLabel")
+    RowText.Size = UDim2.new(0.6, 0, 0, 26)
+    RowText.Position = UDim2.new(0, 14, 0, 4)
+    RowText.BackgroundTransparency = 1
+    RowText.Text = name
+    RowText.Font = Enum.Font.GothamMedium
+    RowText.TextSize = 13
+    RowText.TextColor3 = Color3.fromRGB(220, 220, 220)
+    RowText.TextXAlignment = Enum.TextXAlignment.Left
+    RowText.Parent = Row
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Size = UDim2.new(0.4, -28, 0, 26)
+    ValueLabel.Position = UDim2.new(1, -14, 0, 4)
+    ValueLabel.AnchorPoint = Vector2.new(1, 0)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Text = tostring(currentValue)
+    ValueLabel.Font = Enum.Font.GothamMedium
+    ValueLabel.TextSize = 13
+    ValueLabel.TextColor3 = self.Window.ThemeData.Accent
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.Parent = Row
+
+    local SliderBar = Instance.new("TextButton")
+    SliderBar.Size = UDim2.new(1, -28, 0, 8)
+    SliderBar.Position = UDim2.new(0, 14, 0, 36)
+    SliderBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    SliderBar.BackgroundTransparency = 0.45
+    SliderBar.AutoButtonColor = false
+    SliderBar.Text = ""
+    SliderBar.Parent = Row
+
+    local BarCorner = Instance.new("UICorner")
+    BarCorner.CornerRadius = UDim.new(1, 0)
+    BarCorner.Parent = SliderBar
+
+    local FillBar = Instance.new("Frame")
+    FillBar.Size = UDim2.new((currentValue - min) / (max - min), 0, 1, 0)
+    FillBar.BackgroundColor3 = self.Window.ThemeData.Accent
+    FillBar.BackgroundTransparency = 0.45
+    FillBar.BorderSizePixel = 0
+    FillBar.Parent = SliderBar
+
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = FillBar
+
+    local dragging = false
+    local function updateValue(input)
+        local sizeX = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        currentValue = math.floor(min + ((max - min) * sizeX))
+        FillBar.Size = UDim2.new(sizeX, 0, 1, 0)
+        ValueLabel.Text = tostring(currentValue)
+        pcall(callback, currentValue)
+    end
+
+    SliderBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateValue(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateValue(input)
+        end
+    end)
+end
+
+function AreumUI:CreateInfoBox(options)
+    options = options or {}
+    local name = options.Name or "Info"
+    local infoText = options.Text or "Information"
+
+    local Row = Instance.new("Frame")
+    Row.Size = UDim2.new(1, -24, 0, 42)
+    Row.BackgroundColor3 = self.Window.ThemeData.Row
+    Row.BackgroundTransparency = 0.45
+    Row.Parent = self.Page
+
+    local RowCorner = Instance.new("UICorner")
+    RowCorner.CornerRadius = UDim.new(0, 8)
+    RowCorner.Parent = Row
+
+    local RowStroke = Instance.new("UIStroke")
+    RowStroke.Thickness = 1
+    RowStroke.Color = self.Window.ThemeData.Stroke
+    RowStroke.Parent = Row
+
+    local RowText = Instance.new("TextLabel")
+    RowText.Size = UDim2.new(0.5, 0, 1, 0)
+    RowText.Position = UDim2.new(0, 14, 0, 0)
+    RowText.BackgroundTransparency = 1
+    RowText.Text = name
+    RowText.Font = Enum.Font.GothamMedium
+    RowText.TextSize = 13
+    RowText.TextColor3 = Color3.fromRGB(200, 200, 200)
+    RowText.TextXAlignment = Enum.TextXAlignment.Left
+    RowText.Parent = Row
+
+    local InfoLabel = Instance.new("TextLabel")
+    InfoLabel.Size = UDim2.new(0.5, -14, 1, 0)
+    InfoLabel.Position = UDim2.new(1, -14, 0, 0)
+    InfoLabel.AnchorPoint = Vector2.new(1, 0)
+    InfoLabel.BackgroundTransparency = 1
+    InfoLabel.Text = infoText
+    InfoLabel.Font = Enum.Font.GothamMedium
+    InfoLabel.TextSize = 12
+    InfoLabel.TextColor3 = self.Window.ThemeData.TextMuted
+    InfoLabel.TextXAlignment = Enum.TextXAlignment.Right
+    InfoLabel.Parent = Row
+end
+
 function AreumUI:CreateDropdown(options)
     options = options or {}
     local name = options.Name or "Dropdown"
@@ -411,8 +724,9 @@ function AreumUI:CreateDropdown(options)
     local callback = options.Callback or function() end
 
     local ThemeRow = Instance.new("Frame")
-    ThemeRow.Size = UDim2.new(1, -24, 0, 50)
+    ThemeRow.Size = UDim2.new(1, -24, 0, 46)
     ThemeRow.BackgroundColor3 = self.Window.ThemeData.Row
+    ThemeRow.BackgroundTransparency = 0.45
     ThemeRow.ClipsDescendants = false
     ThemeRow.ZIndex = 2
     ThemeRow.Parent = self.Page
@@ -438,10 +752,11 @@ function AreumUI:CreateDropdown(options)
     ThemeRowText.Parent = ThemeRow
 
     local Badge = Instance.new("TextButton")
-    Badge.Size = UDim2.new(0, 100, 0, 26)
-    Badge.Position = UDim2.new(1, -14, 0.5, -13)
+    Badge.Size = UDim2.new(0, 110, 0, 28)
+    Badge.Position = UDim2.new(1, -14, 0.5, -14)
     Badge.AnchorPoint = Vector2.new(1, 0)
     Badge.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
+    Badge.BackgroundTransparency = 0.45
     Badge.Text = defaultItem .. " ▼"
     Badge.Font = Enum.Font.GothamMedium
     Badge.TextSize = 11
@@ -454,10 +769,11 @@ function AreumUI:CreateDropdown(options)
     BadgeCorner.Parent = Badge
 
     local DropdownList = Instance.new("ScrollingFrame")
-    DropdownList.Size = UDim2.new(0, 100, 0, 0)
-    DropdownList.Position = UDim2.new(1, -14, 0.5, 15)
+    DropdownList.Size = UDim2.new(0, 110, 0, 0)
+    DropdownList.Position = UDim2.new(1, -14, 0.5, 16)
     DropdownList.AnchorPoint = Vector2.new(1, 0)
     DropdownList.BackgroundColor3 = self.Window.ThemeData.Row
+    DropdownList.BackgroundTransparency = 0.45
     DropdownList.BorderSizePixel = 0
     DropdownList.ScrollBarThickness = 0
     DropdownList.ClipsDescendants = true
@@ -491,7 +807,7 @@ function AreumUI:CreateDropdown(options)
         ItemBtn.MouseButton1Click:Connect(function()
             Badge.Text = itemName .. " ▼"
             open = false
-            TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 100, 0, 0)}):Play()
+            TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 110, 0, 0)}):Play()
             task.wait(0.15)
             DropdownList.Visible = false
             pcall(callback, itemName)
@@ -503,10 +819,10 @@ function AreumUI:CreateDropdown(options)
         if open then
             DropdownList.Visible = true
             Badge.Text = defaultItem .. " ▲"
-            TweenService:Create(DropdownList, TweenInfo.new(0.2), {Size = UDim2.new(0, 100, 0, #items * 32)}):Play()
+            TweenService:Create(DropdownList, TweenInfo.new(0.2), {Size = UDim2.new(0, 110, 0, #items * 32)}):Play()
         else
             Badge.Text = defaultItem .. " ▼"
-            local tw = TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 100, 0, 0)})
+            local tw = TweenService:Create(DropdownList, TweenInfo.new(0.15), {Size = UDim2.new(0, 110, 0, 0)})
             tw:Play()
             tw.Completed:Connect(function()
                 if not open then DropdownList.Visible = false end
