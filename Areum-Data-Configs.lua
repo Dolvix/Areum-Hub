@@ -20,8 +20,8 @@ Data.Loaders["BTRLoader"] = {
 }
 
 Data.Loaders["UAV_StrikeLoader"] = {
-    Lversion = "2.000.2",
-    state = "wip",
+    Lversion = "2.289.4",
+    state = "working",
     load = function()
         local result, err = pcall(function()
             local AreumUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/UAV-STRIKE-Loader-Source.lua"))()

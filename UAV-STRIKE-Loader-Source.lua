@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.000.2"
+local Lversion = "2.289.4"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -16,6 +16,7 @@ local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 
 -- =========================================================================
@@ -29,6 +30,12 @@ local ConfigManager = {
         ToggleKey = "LeftControl",
         MobileButton = false,
         FetchVersions = false,
+        PlayerEsp = false,
+        DronesEsp = false,
+        TankEsp = false,
+        ShowName = false,
+        Traces  = false,
+        Fullbright = false,
     }
 }
 
@@ -73,19 +80,31 @@ ConfigManager:Load()
 env.SCRIPT_ACTIVE = true
 env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.LeftControl
 env.STOP_KEY = Enum.KeyCode.F1
+
+-- Configs
 env.CURRENT_THEME = ConfigManager.Data.CurrentTheme
 env.MOBILE_BUTTON = ConfigManager.Data.MobileButton
 env.FETCHVERSIONS = ConfigManager.Data.FetchVersions
+
+-- Visuals
+env.PLAYERESP = ConfigManager.Data.PlayerEsp
+env.DRONESESP = ConfigManager.Data.DronesEsp
+env.TANKESP = ConfigManager.Data.TankEsp
+env.SHOWNAME = ConfigManager.Data.ShowName
+env.TRACES = ConfigManager.Data.Traces
+env.FULLBRIGHT = ConfigManager.Data.Fullbright
 
 local useless_local = false
 local update_shown = false
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
 local DataLibraryLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/refs/heads/main/Areum-Data-Configs.lua"
+local LoaderLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/UAV-STRIKE-Loader-Source.lua"
 
 -- Mobile Floating Button Management
 local mobileButtonGui = nil
 local onupdate = nil
+local TpFunc = nil
 
 local function setupMobileButton(enabled)
     if enabled then
@@ -188,17 +207,99 @@ task.spawn(function()
         })
         env.AreumUI = Window
 
-        local MainTab = Window:CreateTab("Main", "rbxassetid://8772194322")
-        local WeaponsTab = Window:CreateTab("Weapons", "rbxassetid://7246622296")
+        local MainTab = Window:CreateTab(" Main", "rbxassetid://8772194322")
+        local RemoteTab = Window:CreateTab("Remotes", "rbxassetid://7246622296")
+        local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://136474990712998")
+        local TeleportsTab = Window:CreateTab("Teleports", "rbxassetid://10629411698")
         local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
 
-        -- Main Tab Controls
+        -- Main Tab Controls ------------------------------------------------------------------
         MainTab:CreateSection("Test Tab1 ://")
        
-        -- Weapons Tab Controls
-        WeaponsTab:CreateSection("Test Tab2 ://")
+        -- Remote Tab Controls ------------------------------------------------------------------
+        RemoteTab:CreateSection("Test Tab2 ://")
 
-        -- Config Tab Controls
+        -- Visual Tab Controls ------------------------------------------------------------------
+        VisualsTab:CreateSection("Esp Options ://")
+
+        VisualsTab:CreateToggle({
+            Name = "Player ESP",
+            Default = env.PLAYERESP,
+            Callback = function(state)
+                env.PLAYERESP = state
+                ConfigManager.Data.PlayerEsp = state
+                ConfigManager:Save()
+            end
+        })
+
+        VisualsTab:CreateToggle({
+            Name = "Drones ESP",
+            Default = env.DRONESESP,
+            Callback = function(state)
+                env.DRONESESP = state
+                ConfigManager.Data.DronesEsp = state
+                ConfigManager:Save()
+            end
+        })
+
+        VisualsTab:CreateToggle({
+            Name = "SPAAG ESP",
+            Default = env.TANKESP,
+            Callback = function(state)
+                env.TANKESP = state
+                ConfigManager.Data.TankEsp = state
+                ConfigManager:Save()
+            end
+        })
+
+        VisualsTab:CreateSection("Esp Configs ://")
+
+        VisualsTab:CreateToggle({
+            Name = "Show Player's Name",
+            Default = env.SHOWNAME,
+            Callback = function(state)
+                env.SHOWNAME = state
+                ConfigManager.Data.ShowName = state
+                ConfigManager:Save()
+            end
+        })
+
+        VisualsTab:CreateToggle({
+            Name = "Traces",
+            Default = env.TRACES,
+            Callback = function(state)
+                env.TRACES = state
+                ConfigManager.Data.Traces = state
+                ConfigManager:Save()
+            end
+        })
+
+        VisualsTab:CreateSection("Visuals ://")
+
+        VisualsTab:CreateToggle({
+            Name = "Fullbright",
+            Default = env.FULLBRIGHT,
+            Callback = function(state)
+                env.FULLBRIGHT = state
+                ConfigManager.Data.Fullbright = state
+                ConfigManager:Save()
+            end
+        })
+
+        -- Teleports Tab Controls ------------------------------------------------------------------
+        TeleportsTab:CreateSection("Teleport Options ://")
+        TeleportsTab:CreateDropdown({
+            Name = "Teleport To Location",
+            Items = {"Bunker", "Military B", "Sea", "Coal P/P", "Oil Storage", "SPAAG", "Town"},
+            Default = "Bunker",
+            Callback = function(location)
+                TpFunc(location)
+            end
+        })
+
+
+
+        -- Config Tab Controls ------------------------------------------------------------------
         ConfigTab:CreateSection("Themes ://")
         ConfigTab:CreateDropdown({
             Name = "Theme",
@@ -215,7 +316,7 @@ task.spawn(function()
                 
                 task.spawn(function()
                     pcall(function()
-                        loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/UAV-STRIKE-Loader-Source.lua"))()
+                        loadstring(game:HttpGet(LoaderLink))()
                     end)
                 end)
             end
@@ -281,7 +382,7 @@ task.spawn(function()
                     if typeof(env.CloseAreumHub) == "function" then
                         task.delay(1,function()
                             local result, err = pcall(function()
-                                local AreumUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/UAV-STRIKE-Loader-Source.lua"))()
+                                local AreumUI = loadstring(game:HttpGet(LoaderLink))()
                             end)
 
                             if err then 
@@ -302,16 +403,76 @@ task.spawn(function()
     end
 end)
 
--- Game Automation References
+-- In-Game Stuff
 
-local character = player.Character or player.CharacterAdded:Wait()
-local hrp = character:WaitForChild("HumanoidRootPart")
+local DronesFolder = workspace.Drones
 
-local device_supported = UserInputService.KeyboardEnabled
+local ActivePlayerEsps = {}
+local ActiveDroneEsps = {}
+-- {"Bunker", "Military B", "Coal P/P", "Oil Storage", "SPAAG", "Town"}
+local TpPositions = {
+    ["Bunker"] = CFrame.new(-271.4104, -28.2847118, -2093.34888, 1, 0, 0, 0, 1, 0, 0, 0, 1),
+    ["Military B"] = CFrame.new(-1436.64355, 3.79980755, -1331.41272, 0.0318882465, 6.29213872e-08, -0.999491453, -3.47737341e-08, 1, 6.18439628e-08, 0.999491453, 3.27839551e-08, 0.0318882465),
+    ["Coal P/P"] = CFrame.new(533.928833, 2.67540526, -2236.35571, 0.047317028, -7.86532297e-08, -0.99887991, 1.52991653e-09, 1, -7.8668954e-08, 0.99887991, 2.19417817e-09, 0.047317028),
+    ["Oil Storage"] = CFrame.new(-430.949951, 2.69993806, -3238.0498, 1, 4.59972433e-08, -5.4533289e-14, -4.59972433e-08, 1, -4.18167474e-08, 5.26098364e-14, 4.18167474e-08, 1),
+    ["Sea"] = CFrame.new(-122.399597, 2.80006003, -384.100037, 1, 5.40566703e-08, 3.0156172e-14, -5.40566703e-08, 1, 3.04135064e-08, -2.85121183e-14, -3.04135064e-08, 1),
+    ["SPAAG"] = CFrame.new(400.650085, 2.70006013, -1126.84985, 1, -4.32258389e-08, -4.16284811e-14, 4.32258389e-08, 1, 1.00085291e-08, 4.1195854e-14, -1.00085291e-08, 1),
+    ["Town"] = CFrame.new(-329.234802, 2.70006013, -2236.25977, 1, -1.55894997e-09, -4.34150506e-15, 1.55894997e-09, 1, -8.44678283e-08, 4.4731865e-15, 8.44678283e-08, 1),
+}
+
+-- Other Loops
+
+local function InitESP(player: Player)
+    local onChar = player.CharacterAdded:Connect(function(character)
+
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = character
+
+        highlight.FillColor = Color3.fromRGB(22, 137, 172)
+        highlight.FillTransparency = 0.75
+        highlight.OutlineColor = Color3.fromRGB(28, 184, 231)
+        highlight.OutlineTransparency = 0
+
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+        highlight.Enabled = false
+
+        ActivePlayerEsps[player.Name] = highlight
+
+    end)
+
+    local onRem = player.CharacterRemoving:Connect(function(character)
+        ActivePlayerEsps[player.Name] = nil
+    end)
+
+    Players.PlayerRemoving:Connect(function(player)
+        if ActivePlayerEsps[player.Name] then
+            onChar:Disconnect()
+            onRem:Disconnect()
+        end
+    end)
+
+end
+
+local function InitDrone(drone: Model)
+    local highlight = Instance.new("Highlight")
+    highlight.Parent = drone
+    highlight.FillColor = Color3.fromRGB(167, 0, 0)
+    highlight.FillTransparency = 0.75
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineTransparency = 0
+
+    highlight.Enabled = false
+    
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+    ActiveDroneEsps[drone] = highlight
+
+end
 
 task.spawn(function()
 
-    while task.wait(30) do
+    while task.wait(10) do
         if env.FETCHVERSIONS then
             local GitHub_Version = loadstring(game:HttpGet(DataLibraryLink))()
             if GitHub_Version.Loaders.UAV_StrikeLoader.Lversion ~= Lversion then
@@ -322,9 +483,89 @@ task.spawn(function()
     
 end)
 
--- Main Automation Loop
+task.spawn(function()
+
+    local connectionA0, connectionA1 = nil, nil
+
+    connectionA0 = Players.PlayerAdded:Connect(function()
+        if not env.SCRIPT_ACTIVE then connectionA0:Disconnect() return end
+        InitESP(player)
+    end)
+
+    connectionA1 = Players.PlayerRemoving:Connect(function(player)
+        if not env.SCRIPT_ACTIVE then connectionA1:Disconnect() return end
+        if ActivePlayerEsps[player.Name] then
+            ActivePlayerEsps[player.Name] = nil
+        end
+    end)
+end)
+
+task.spawn(function()
+    
+    local connectionB0, connectionB1 = nil, nil
+
+    connectionB0 = DronesFolder.ChildAdded:Connect(function(drone: Model)
+        if not env.SCRIPT_ACTIVE then connectionB0:Disconnect() return end
+        InitDrone(drone)
+    end)
+
+    connectionB1 = DronesFolder.ChildRemoved:Connect(function(drone)
+        if not env.SCRIPT_ACTIVE then connectionB1:Disconnect() return end
+        ActiveDroneEsps[drone] = nil
+    end)
+
+end)
+
+task.spawn(function()
+    
+    TpFunc = function(location)
+        
+        local characater = player.Character or player.CharacterAdded:Wait()
+        local hrp = characater:WaitForChild("HumanoidRootPart")
+
+        if hrp and characater and env.SCRIPT_ACTIVE then
+            hrp.CFrame = TpPositions[location]
+        end
+    end
+
+end)
+
+-- Main Loop
 task.spawn(function()
     while env.SCRIPT_ACTIVE and task.wait(0.01) do
+
+        -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT -- FULLBRIGHT 
+
+        if env.FULLBRIGHT and env.SCRIPT_ACTIVE then
+            Lighting.Ambient = Color3.fromRGB(255,255,255) 
+            Lighting.Brightness  = 5 
+            Lighting.GlobalShadows = false 
+            Lighting.ClockTime = 12 
+
+            Lighting.Atmosphere.Density = 0 
+            Lighting.Atmosphere.Offset = 0 
+
+        elseif not env.FULLBRIGHT and env.SCRIPT_ACTIVE then
+            Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
+            Lighting.GlobalShadows = true
+
+            Lighting.Atmosphere.Density = 0.2
+            Lighting.Atmosphere.Offset = 0.25
+
+        end
+
+        -- PLAYER ESP -- PLAYER ESP -- PLAYER ESP  -- PLAYER ESP -- PLAYER ESP 
+
+        for _, esp in pairs(ActivePlayerEsps) do
+            esp.Enabled = (env.PLAYERESP and env.SCRIPT_ACTIVE)
+        end
+
+        -- DRONES ESP -- DRONES ESP -- DRONES ESP  -- DRONES ESP -- DRONES ESP 
+
+        for _, esp in pairs(ActiveDroneEsps) do
+            esp.Enabled = (env.DRONESESP and env.SCRIPT_ACTIVE)
+        end
+
 
     end
 end)
@@ -335,6 +576,29 @@ local function closeScriptRoutine()
     env.AreumHubExecuted = false
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
+
+    -- Visuals
+    env.PLAYERESP = false
+    env.DRONESESP = false
+    env.TANKESP = false
+    env.SHOWNAME = false
+    env.TRACES = false
+    env.FULLBRIGHT = false
+
+    for _, esp in pairs(ActivePlayerEsps) do
+        esp.Enabled = false
+        esp = nil
+    end
+
+    for _, esp in pairs(ActiveDroneEsps) do
+        esp.Enabled = false
+        esp = nil
+    end
+
+    Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
+    Lighting.GlobalShadows = true
+    Lighting.Atmosphere.Density = 0.2
+    Lighting.Atmosphere.Offset = 0.25
     
     setupMobileButton(false)
     
