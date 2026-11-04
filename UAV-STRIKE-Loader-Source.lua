@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "2.296.4"
+local Lversion = "2.296.5"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 2.000.0 ]`)
 
 local env = getfenv(0)
@@ -608,7 +608,7 @@ SafeZone.Parent = Instances
 SafeZone.Anchored = true
 SafeZone.CanCollide = true
 SafeZone.CastShadow = false
-SafeZone.Size = Vector3.new(30,1,30)
+SafeZone.Size = Vector3.new(60,1,60)
 SafeZone.Position = Vector3.new(10000,10000,10000)
 SafeZone.TopSurface = Enum.SurfaceType.Studs
 SafeZone.BottomSurface = Enum.SurfaceType.Studs
@@ -729,7 +729,7 @@ RunService.RenderStepped:Connect(function()
                 end
             else
                 -- Cooldown check (0.5s between teleports) and proximity check (within 100 studs)
-                if currentTime - lastDodgeTick >= 0.5 then
+                if currentTime - lastDodgeTick >= 0.25 then
                     local closestDistance = math.huge
                     
                     for drone, _ in pairs(ActiveDroneEsps) do
@@ -744,7 +744,7 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                     
-                    if closestDistance <= 150 then
+                    if closestDistance <= 200 then
                         returnCFrame = hrp.CFrame
                         hrp.CFrame = CFrame.new(SafeZone.Position + Vector3.new(0, 5, 0))
                         lastDodgeTick = currentTime
