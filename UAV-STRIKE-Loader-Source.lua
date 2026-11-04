@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.296.6"
+local Lversion = "3.297.4"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -44,7 +44,6 @@ local ConfigManager = {
 
         PlayerEsp = false,
         DronesEsp = false,
-        TankEsp = false,
         Traces  = false,
         Fullbright = false,
 
@@ -88,6 +87,15 @@ function ConfigManager:Save()
     end)
 end
 
+local function ThemeManager()
+    if player.DisplayName == "Areum" or player.Name == "AreumTheBest" then
+        return {"Violet", "AreumCoolTheme", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"}
+    else
+        return {"Violet", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"}
+    end
+end
+
+
 ConfigManager:Load()
 
 -- Environment Configuration Defaults
@@ -105,7 +113,6 @@ env.WATERWALKING = ConfigManager.Data.WaterWalking
 
 env.PLAYERESP = ConfigManager.Data.PlayerEsp
 env.DRONESESP = ConfigManager.Data.DronesEsp
-env.TANKESP = ConfigManager.Data.TankEsp
 env.TRACES = ConfigManager.Data.Traces
 env.FULLBRIGHT = ConfigManager.Data.Fullbright
 
@@ -287,16 +294,6 @@ task.spawn(function()
             end
         })
 
-        VisualsTab:CreateToggle({
-            Name = "SPAAG ESP",
-            Default = env.TANKESP,
-            Callback = function(state)
-                env.TANKESP = state
-                ConfigManager.Data.TankEsp = state
-                ConfigManager:Save()
-            end
-        })
-
         VisualsTab:CreateSection("Esp Configs ://")
 
         VisualsTab:CreateToggle({
@@ -344,7 +341,7 @@ task.spawn(function()
 
         ConfigTab:CreateDropdown({
             Name = "Selected Theme",
-            Items = {"Violet", "Xmas", "Ocean", "Crimson", "Noise","Sakura","Void"},
+            Items = ThemeManager(),
             Default = env.CURRENT_THEME,
             Callback = function(selectedTheme)
                 env.CURRENT_THEME = selectedTheme
@@ -545,6 +542,7 @@ local function InitDrone(drone: Model)
     end
 end
 
+
 -- Initial Tracking Registrations
 for _, p in ipairs(Players:GetPlayers()) do
     InitESP(p)
@@ -564,6 +562,8 @@ Players.PlayerRemoving:Connect(function(p)
         ActivePlayerTracers[p.Name] = nil
     end
 end)
+
+
 
 if DronesFolder then
     for _, d in ipairs(DronesFolder:GetChildren()) do
@@ -793,7 +793,6 @@ local function closeScriptRoutine()
 
     env.PLAYERESP = false
     env.DRONESESP = false
-    env.TANKESP = false
     env.TRACES = false
     env.FULLBRIGHT = false
 

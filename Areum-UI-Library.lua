@@ -76,6 +76,15 @@ local Themes = {
         TextMuted = Color3.fromRGB(168, 168, 168),
         BackgroundImage = "rbxassetid://128985227018816"
     },
+    AreumCoolTheme = {
+        BackgroundGradient = {Color3.fromRGB(17, 17, 17), Color3.fromRGB(0, 0, 0)},
+        Sidebar = Color3.fromRGB(15, 0, 0),
+        Row = Color3.fromRGB(15, 0, 0),
+        Stroke = Color3.fromRGB(255, 0, 0),
+        Accent = Color3.fromRGB(255, 17, 17),
+        TextMuted = Color3.fromRGB(78, 0, 0),
+        BackgroundImage = "rbxassetid://132309045954101"
+    },
 }
 
 -- Helper function to format input IDs cleanly into valid rbxassetids
