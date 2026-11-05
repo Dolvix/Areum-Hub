@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.305.2"
+local Lversion = "3.305.3"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -48,6 +48,14 @@ end
 local HasDrawing = (typeof(Drawing) == "table" and rawget(Drawing, "new") ~= nil) or (typeof(Drawing) == "userdata" or typeof(Drawing) == "function")
 local ManuallCall01 
 
+-- Connection Tracking Variables for Clean Disconnection
+local renderSteppedConn = nil
+local stopInputConn = nil
+local playerAddedConn = nil
+local playerRemovingConn = nil
+local droneAddedConn = nil
+local droneRemovingConn = nil
+
 -- =========================================================================
 -- CONFIGURATION MANAGER (Crash-Proof Mobile JSON Workspace Saving)
 -- =========================================================================
@@ -75,7 +83,6 @@ local ConfigManager = {
         DodgeDronesDistance = 200,
         WalkSpeed = 30,
         JumpPower = 50,
-
     }
 }
 
@@ -121,7 +128,6 @@ local function ThemeManager()
     end
 end
 
-
 ConfigManager:Load()
 
 -- Environment Configuration Defaults & Variable Alignments
@@ -146,9 +152,8 @@ env.SPEEDVALUE = ConfigManager.Data.WalkSpeed
 env.JUMPVALUE = ConfigManager.Data.JumpPower
 env.INFJUMP = ConfigManager.Data.InfiniteJump
 env.SPEEDMODIFIFICATIONS = ConfigManager.Data.WalkSpeedModifications
-env.JUMPMODIFICATIONS = ConfigManager.Data.JumpPowerModifications
+env.JUMPMODIFIFICATIONS = ConfigManager.Data.JumpPowerModifications
 
-local useless_local = false
 local update_shown = false
 
 local UIModuleLink = "https://raw.githubusercontent.com/Dolvix/Areum-Hub/main/Areum-UI-Library.lua"
@@ -306,7 +311,6 @@ task.spawn(function()
         RemoteTab:CreateSection("Test Tab2 ://")
 
         -- Player Tab
-
         PlayerTab:CreateSection("Character Settings ://")
 
         PlayerTab:CreateToggle({
@@ -454,7 +458,7 @@ task.spawn(function()
                     env.CloseAreumHub()
                 end
                 
-                task.spawn(function()
+                task.delay(0.5, function()
                     pcall(function()
                         loadstring(game:HttpGet(LoaderLink))()
                     end)
@@ -529,7 +533,7 @@ task.spawn(function()
                 Name = "Load into New Version",
                 Callback = function()
                     if typeof(env.CloseAreumHub) == "function" then
-                        task.delay(1,function()
+                        task.delay(1, function()
                             pcall(function()
                                 loadstring(game:HttpGet(LoaderLink))()
                             end)
@@ -559,8 +563,8 @@ SafeZone.Parent = Instances
 SafeZone.Anchored = true
 SafeZone.CanCollide = true
 SafeZone.CastShadow = false
-SafeZone.Size = Vector3.new(60,1,60)
-SafeZone.Position = Vector3.new(10000,10000,10000)
+SafeZone.Size = Vector3.new(60, 1, 60)
+SafeZone.Position = Vector3.new(10000, 10000, 10000)
 SafeZone.TopSurface = Enum.SurfaceType.Studs
 SafeZone.BottomSurface = Enum.SurfaceType.Studs
 
@@ -644,17 +648,16 @@ local function InitDrone(drone: Model)
     end
 end
 
-
 -- Initial Tracking Registrations
 for _, p in ipairs(Players:GetPlayers()) do
     InitESP(p)
 end
 
-Players.PlayerAdded:Connect(function(p)
+playerAddedConn = Players.PlayerAdded:Connect(function(p)
     InitESP(p)
 end)
 
-Players.PlayerRemoving:Connect(function(p)
+playerRemovingConn = Players.PlayerRemoving:Connect(function(p)
     if ActivePlayerEsps[p.Name] then
         pcall(function() ActivePlayerEsps[p.Name]:Destroy() end)
         ActivePlayerEsps[p.Name] = nil
@@ -665,8 +668,6 @@ Players.PlayerRemoving:Connect(function(p)
     end
 end)
 
-
-
 if DronesFolder then
     for _, d in ipairs(DronesFolder:GetChildren()) do
         if d:IsA("Model") then
@@ -674,13 +675,13 @@ if DronesFolder then
         end
     end
 
-    DronesFolder.ChildAdded:Connect(function(child)
+    droneAddedConn = DronesFolder.ChildAdded:Connect(function(child)
         if child:IsA("Model") then
             InitDrone(child)
         end
     end)
 
-    DronesFolder.ChildRemoved:Connect(function(child)
+    droneRemovingConn = DronesFolder.ChildRemoved:Connect(function(child)
         if ActiveDroneEsps[child] then
             pcall(function() ActiveDroneEsps[child]:Destroy() end)
             ActiveDroneEsps[child] = nil
@@ -702,14 +703,14 @@ task.spawn(function()
             WaterWalkPart.Transparency = 1
             WaterWalkPart.Name = "SafeWater"
             WaterWalkPart.Size = p1.Size
-            WaterWalkPart.Position = p1.Position + Vector3.new(0,3,0)
+            WaterWalkPart.Position = p1.Position + Vector3.new(0, 3, 0)
             WaterWalkPart.Anchored = true
             WaterWalkPart.CastShadow = false
         end
     end
 end)
 
-ManuallCall01 = function ()
+ManuallCall01 = function()
     for _, SafeWater in pairs(Instances:GetChildren()) do
         if SafeWater.Name == "SafeWater" then
             SafeWater.CanCollide = (env.SCRIPT_ACTIVE and env.WATERWALKING)
@@ -717,9 +718,10 @@ ManuallCall01 = function ()
     end
 end
 
--- 15 Seconds Loop
+-- 15 Seconds Version Fetch Loop
 task.spawn(function()
     while task.wait(15) do
+        if not env.SCRIPT_ACTIVE then break end
         if env.FETCHVERSIONS then
             local success, GitHub_Version = pcall(function()
                 return loadstring(game:HttpGet(DataLibraryLink))()
@@ -735,9 +737,9 @@ TpFunc = function(location)
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:WaitForChild("HumanoidRootPart")
 
-     if hrp and character and env.SCRIPT_ACTIVE then
+    if hrp and character and env.SCRIPT_ACTIVE then
         hrp.CFrame = TpPositions[location]
-     end
+    end
 end
 
 -- Variables for Auto Dodge Drones Timing & State
@@ -746,7 +748,7 @@ local isDodging = false
 local returnCFrame = nil
 
 -- Main RenderStepped Loop
-RunService.RenderStepped:Connect(function()
+renderSteppedConn = RunService.RenderStepped:Connect(function()
     if not env.SCRIPT_ACTIVE then return end
 
     -- FULLBRIGHT
@@ -871,7 +873,6 @@ RunService.RenderStepped:Connect(function()
         if hrp then
             local currentTime = tick()
             
-            -- Check if we are currently holding the safe zone timeout
             if isDodging then
                 if currentTime - lastDodgeTick >= 3 then
                     isDodging = false
@@ -881,7 +882,6 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             else
-                -- Cooldown check (0.5s between teleports) and proximity check (within 100 studs)
                 if currentTime - lastDodgeTick >= 0.25 then
                     local closestDistance = math.huge
                     
@@ -909,21 +909,27 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Cleanup Routine
+-- Comprehensive Cleanup Routine
 local function closeScriptRoutine()
     env.SCRIPT_ACTIVE = false
     env.AreumHubExecuted = false
+
+    -- Disconnect all active loops and connections to prevent stacking/leaks
+    if renderSteppedConn then renderSteppedConn:Disconnect(); renderSteppedConn = nil end
+    if stopInputConn then stopInputConn:Disconnect(); stopInputConn = nil end
+    if playerAddedConn then playerAddedConn:Disconnect(); playerAddedConn = nil end
+    if playerRemovingConn then playerRemovingConn:Disconnect(); playerRemovingConn = nil end
+    if droneAddedConn then droneAddedConn:Disconnect(); droneAddedConn = nil end
+    if droneRemovingConn then droneRemovingConn:Disconnect(); droneRemovingConn = nil end
+
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
-
     env.DODGEDRONES = false
     env.WATERWALKING = false
-
     env.PLAYERESP = false
     env.DRONESESP = false
     env.TRACES = false
     env.FULLBRIGHT = false
-
     env.SPEEDMODIFIFICATIONS = false
     env.JUMPMODIFIFICATIONS = false
     env.INFJUMP = false
@@ -932,11 +938,13 @@ local function closeScriptRoutine()
     env.JUMPVALUE = 50
     env.DODGEDRONESDISTANCE = 200
 
+    -- Destroy ESPs
     for _, esp in pairs(ActivePlayerEsps) do
         pcall(function() esp:Destroy() end)
     end
     ActivePlayerEsps = {}
 
+    -- Remove Tracers
     for _, tracer in pairs(ActivePlayerTracers) do
         pcall(function() tracer:Remove() end)
     end
@@ -952,6 +960,7 @@ local function closeScriptRoutine()
     end
     ActiveDroneTracers = {}
 
+    -- Revert Lighting Settings
     Lighting.Ambient = GameLighting.Ambient
     Lighting.Brightness = GameLighting.Brightness 
     Lighting.GlobalShadows = GameLighting.GlobalShadows
@@ -966,11 +975,12 @@ local function closeScriptRoutine()
     if env.AreumUI then
         pcall(function() env.AreumUI:Destroy() end)
     end
+
+    pcall(function() Instances:Destroy() end)
 end
 env.CloseAreumHub = closeScriptRoutine
 
 -- Termination Keybind Listener (F1)
-local stopInputConn
 stopInputConn = UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     if gameProcessedEvent then return end
     if input.KeyCode == env.STOP_KEY then
