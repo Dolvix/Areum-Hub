@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Universal Debug Tool - Developer Edition)
 -- =========================================================================
-local Lversion = "1.000.0"
+local Lversion = "1.012.1"
 print(`[ Loader Version: v{Lversion} | Debug Menu ]`)
 
 local env = getfenv(0)
@@ -19,6 +19,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 if player.DisplayName ~= "Areum" and player.DisplayName ~= "AreumTheBest" then
     warn("[Areum Hub] Only people with display name 'AreumTheBest' can use this loader!")
@@ -41,6 +42,17 @@ local ConfigManager = {
         FetchVersions = false,
 
     }
+}
+
+local GameLighting = {
+    Brightness = Lighting.Brightness,
+    Ambient = Lighting.Ambient,
+    GlobalShadows = Lighting.GlobalShadows,
+    ClockTime = Lighting.ClockTime,
+    Atmopshere = {
+        Density = Lighting.Atmosphere.Density,
+        Offset = Lighting.Atmosphere.Offset,
+    };
 }
 
 function ConfigManager:Load()
@@ -94,6 +106,7 @@ env.INFJUMP = false
 env.PLAYERESP = false
 env.TRACES = false
 env.DISABLE3DRENDERING = false
+env.FULLBRIGHT = false
 
 env.SPEEDVALUE = 0
 env.JUMPVALUE = 0
@@ -405,6 +418,14 @@ task.spawn(function()
                     end
                 })
 
+                VisualsTab:CreateToggle({
+                    Name = "Fullbright",
+                    Default = env.FULLBRIGHT,
+                    Callback = function(state)
+                        env.FULLBRIGHT = state
+                    end
+                })
+
             end
         })
 
@@ -590,7 +611,31 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.01) do
+    while task.wait() and env.SCRIPT_ACTIVE do
+
+        if env.FULLBRIGHT then
+            Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+            Lighting.Brightness = 5
+            Lighting.GlobalShadows = false
+            Lighting.ClockTime = 12
+
+            if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+                Lighting.Atmosphere.Density = 0
+                Lighting.Atmosphere.Offset = 0
+            end
+
+        else
+            Lighting.Ambient = GameLighting.Ambient
+            Lighting.Brightness = GameLighting.Brightness
+            Lighting.GlobalShadows = GameLighting.GlobalShadows
+            Lighting.ClockTime = GameLighting.ClockTime
+
+            if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+                Lighting.Atmosphere.Density = GameLighting.Atmopshere.Density
+                Lighting.Atmosphere.Offset = GameLighting.Atmopshere.Offset
+            end
+        end
+        
         if env.SPEEDMODIFIFICATIONS and env.SCRIPT_ACTIVE then
             local character = player.Character
             if character and character:FindFirstChild("Humanoid") then
@@ -648,14 +693,13 @@ task.spawn(function()
                     end
                 end
 
-                if not shouldShow and tracer then
-                    tracer.Visible = false
-                end
+            if not shouldShow and tracer then
+                tracer.Visible = false
             end
         end
 
         RunService:Set3dRenderingEnabled(not env.DISABLE3DRENDERING)
-
+        end
     end
 end)
 
@@ -673,6 +717,26 @@ local function closeScriptRoutine()
     env.PLAYERESP = false
     env.TRACES = false
     env.DISABLE3DRENDERING = false
+
+    Lighting.Ambient = GameLighting.Ambient
+    Lighting.Brightness = GameLighting.Brightness
+    Lighting.GlobalShadows = GameLighting.GlobalShadows
+    Lighting.ClockTime = GameLighting.ClockTime
+
+    if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+         Lighting.Atmosphere.Density = GameLighting.Atmopshere.Density
+         Lighting.Atmosphere.Offset = GameLighting.Atmopshere.Offset
+    end
+
+    for _, esp in pairs(ActivePlayerEsps) do
+        pcall(function() esp:Destroy() end)
+    end
+    ActivePlayerEsps = {}
+
+    for _, tracer in pairs(ActivePlayerTracers) do
+        pcall(function() tracer:Remove() end)
+    end
+    ActivePlayerTracers = {}
 
     RunService:Set3dRenderingEnabled(true)
 
