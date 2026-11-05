@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (Universal Debug Tool - Developer Edition)
 -- =========================================================================
-local Lversion = "1.012.1"
+local Lversion = "1.012.2"
 print(`[ Loader Version: v{Lversion} | Debug Menu ]`)
 
 local env = getfenv(0)
