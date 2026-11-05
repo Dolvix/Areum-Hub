@@ -2,7 +2,7 @@
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
 local Lversion = "3.305.3"
-print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
+print(`[ Loader Version: v{Lversion} [TEST] | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
 
@@ -914,6 +914,8 @@ local function closeScriptRoutine()
     env.SCRIPT_ACTIVE = false
     env.AreumHubExecuted = false
 
+    print("[Areum Hub] Loader Stopped.")
+
     -- Disconnect all active loops and connections to prevent stacking/leaks
     if renderSteppedConn then renderSteppedConn:Disconnect(); renderSteppedConn = nil end
     if stopInputConn then stopInputConn:Disconnect(); stopInputConn = nil end
@@ -921,6 +923,8 @@ local function closeScriptRoutine()
     if playerRemovingConn then playerRemovingConn:Disconnect(); playerRemovingConn = nil end
     if droneAddedConn then droneAddedConn:Disconnect(); droneAddedConn = nil end
     if droneRemovingConn then droneRemovingConn:Disconnect(); droneRemovingConn = nil end
+
+    print("[Areum Hub] Disconnected Connections.")
 
     env.MOBILE_BUTTON = false
     env.FETCHVERSIONS = false
@@ -936,19 +940,27 @@ local function closeScriptRoutine()
 
     env.SPEEDVALUE = 30
     env.JUMPVALUE = 50
-    env.DODGEDRONESDISTANCE = 200
+    env.INFJUMP = false
+    env.SPEEDMODIFIFICATIONS = false
+    env.JUMPMODIFIFICATIONS = false
+
+    print("[Areum Hub] Disconnected env.")
 
     -- Destroy ESPs
     for _, esp in pairs(ActivePlayerEsps) do
         pcall(function() esp:Destroy() end)
     end
     ActivePlayerEsps = {}
+    
+    print("[Areum Hub] Disconnected Player ESPs.")
 
     -- Remove Tracers
     for _, tracer in pairs(ActivePlayerTracers) do
         pcall(function() tracer:Remove() end)
     end
     ActivePlayerTracers = {}
+
+    print("[Areum Hub] Disconnected Player Tracers.")
 
     for _, esp in pairs(ActiveDroneEsps) do
         pcall(function() esp:Destroy() end)
@@ -959,24 +971,33 @@ local function closeScriptRoutine()
         pcall(function() tracer:Remove() end)
     end
     ActiveDroneTracers = {}
+    
+    print("[Areum Hub] Disconnected Visuals.")
 
-    -- Revert Lighting Settings
+    --[[
     Lighting.Ambient = GameLighting.Ambient
     Lighting.Brightness = GameLighting.Brightness 
     Lighting.GlobalShadows = GameLighting.GlobalShadows
     Lighting.ClockTime = GameLighting.ClockTime
-    if Lighting:FindFirstChild("Atmosphere") then
+
+    if Lighting:FindFirstChildWhichIsA("Atmosphere") then
         Lighting.Atmosphere.Density = GameLighting.Atmosphere.Density
         Lighting.Atmosphere.Offset = GameLighting.Atmosphere.Offset
     end
-    
+
+    ]]
+
     setupMobileButton(false)
-    
+
+    print("[Areum Hub] Mobile Button Disabled.")
+
     if env.AreumUI then
         pcall(function() env.AreumUI:Destroy() end)
     end
 
     pcall(function() Instances:Destroy() end)
+
+    print("[Areum Hub] Script has been terminated and cleaned up successfully.")
 end
 env.CloseAreumHub = closeScriptRoutine
 
