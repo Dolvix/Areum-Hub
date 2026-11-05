@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.305.0"
+local Lversion = "3.305.1"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -20,7 +20,7 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
-local player = Players.LocalPlayerS
+local player = Players.LocalPlayer
 local Instances = Instance.new("Folder", workspace)
 local GameLighting = {}
 
