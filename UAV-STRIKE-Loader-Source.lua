@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.304.9"
+local Lversion = "3.305.0"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -20,8 +20,7 @@ local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
-local player = Players.LocalPlayer
-
+local player = Players.LocalPlayerS
 local Instances = Instance.new("Folder", workspace)
 local GameLighting = {}
 
@@ -125,7 +124,7 @@ end
 
 ConfigManager:Load()
 
--- Environment Configuration Defaults
+-- Environment Configuration Defaults & Variable Alignments
 env.SCRIPT_ACTIVE = true
 env.UI_TOGGLE_KEY = Enum.KeyCode[ConfigManager.Data.ToggleKey] or Enum.KeyCode.LeftControl
 env.STOP_KEY = Enum.KeyCode.F1
@@ -143,11 +142,11 @@ env.DRONESESP = ConfigManager.Data.DronesEsp
 env.TRACES = ConfigManager.Data.Traces
 env.FULLBRIGHT = ConfigManager.Data.Fullbright
 
-env.WALKSPEED = ConfigManager.Data.WalkSpeed
-env.JUMPPOWER = ConfigManager.Data.JumpPower
-env.INFINITEJUMP = ConfigManager.Data.InfiniteJump
-env.WALKSPEEDMOD = ConfigManager.Data.WalkSpeedModifications
-env.JUMPPOWERMOD = ConfigManager.Data.JumpPowerModifications
+env.SPEEDVALUE = ConfigManager.Data.WalkSpeed
+env.JUMPVALUE = ConfigManager.Data.JumpPower
+env.INFJUMP = ConfigManager.Data.InfiniteJump
+env.SPEEDMODIFIFICATIONS = ConfigManager.Data.WalkSpeedModifications
+env.JUMPMODIFICATIONS = ConfigManager.Data.JumpPowerModifications
 
 local useless_local = false
 local update_shown = false
@@ -312,7 +311,7 @@ task.spawn(function()
 
         PlayerTab:CreateToggle({
             Name = "Walkspeed Modifications",
-            Default = env.WALKSPEEDMOD,
+            Default = env.SPEEDMODIFIFICATIONS,
             Callback = function(state)
                 env.SPEEDMODIFIFICATIONS = state
                 ConfigManager.Data.WalkSpeedModifications = state
