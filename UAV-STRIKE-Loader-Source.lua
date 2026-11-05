@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.305.1"
+local Lversion = "3.305.2"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -780,6 +780,7 @@ RunService.RenderStepped:Connect(function()
     if env.JUMPMODIFIFICATIONS and env.SCRIPT_ACTIVE then
         local character = player.Character
         if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.UseJumpPower = true
             character.Humanoid.JumpPower = env.JUMPVALUE
         end
     end
@@ -923,12 +924,13 @@ local function closeScriptRoutine()
     env.TRACES = false
     env.FULLBRIGHT = false
 
-    env.WALKSPEEDMOD = false
-    env.JUMPPOWERMOD = false
-    env.INFINITEJUMP = false
+    env.SPEEDMODIFIFICATIONS = false
+    env.JUMPMODIFIFICATIONS = false
+    env.INFJUMP = false
 
-    env.WALKSPEED = 30
-    env.JUMPPOWER = 50
+    env.SPEEDVALUE = 30
+    env.JUMPVALUE = 50
+    env.DODGEDRONESDISTANCE = 200
 
     for _, esp in pairs(ActivePlayerEsps) do
         pcall(function() esp:Destroy() end)
