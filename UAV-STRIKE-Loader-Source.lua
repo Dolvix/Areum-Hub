@@ -1,7 +1,7 @@
 -- =========================================================================
 -- AREUM HUB LOADER (UAV STRIKE Loader - Mobile & PC Optimized)
 -- =========================================================================
-local Lversion = "3.297.4"
+local Lversion = "3.304.9"
 print(`[ Loader Version: v{Lversion} | Supports UI Library Versions From 3.000.0 ]`)
 
 local env = getfenv(0)
@@ -23,10 +23,30 @@ local Camera = Workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 local Instances = Instance.new("Folder", workspace)
+local GameLighting = {}
+
+if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+    GameLighting = {
+        Brightness = Lighting.Brightness,
+        Ambient = Lighting.Ambient,
+        GlobalShadows = Lighting.GlobalShadows,
+        ClockTime = Lighting.ClockTime,
+        Atmopshere = {
+            Density = Lighting:FindFirstChildWhichIsA("Atmosphere").Density,
+            Offset = Lighting:FindFirstChildWhichIsA("Atmosphere").Offset,
+        };
+    }
+else
+    GameLighting = {
+        Brightness = Lighting.Brightness,
+        Ambient = Lighting.Ambient,
+        GlobalShadows = Lighting.GlobalShadows,
+        ClockTime = Lighting.ClockTime,
+    }
+end
 
 -- Check Executor Drawing Library Availability Safely
 local HasDrawing = (typeof(Drawing) == "table" and rawget(Drawing, "new") ~= nil) or (typeof(Drawing) == "userdata" or typeof(Drawing) == "function")
-
 local ManuallCall01 
 
 -- =========================================================================
@@ -49,7 +69,14 @@ local ConfigManager = {
 
         WaterWalking = false,
         DodgeDrones = false,
+        WalkSpeedModifications = false,
+        JumpPowerModifications = false,
+        InfiniteJump = false,
+
         DodgeDronesDistance = 200,
+        WalkSpeed = 30,
+        JumpPower = 50,
+
     }
 }
 
@@ -115,6 +142,12 @@ env.PLAYERESP = ConfigManager.Data.PlayerEsp
 env.DRONESESP = ConfigManager.Data.DronesEsp
 env.TRACES = ConfigManager.Data.Traces
 env.FULLBRIGHT = ConfigManager.Data.Fullbright
+
+env.WALKSPEED = ConfigManager.Data.WalkSpeed
+env.JUMPPOWER = ConfigManager.Data.JumpPower
+env.INFINITEJUMP = ConfigManager.Data.InfiniteJump
+env.WALKSPEEDMOD = ConfigManager.Data.WalkSpeedModifications
+env.JUMPPOWERMOD = ConfigManager.Data.JumpPowerModifications
 
 local useless_local = false
 local update_shown = false
@@ -229,9 +262,11 @@ task.spawn(function()
 
         local MainTab = Window:CreateTab(" Main", "rbxassetid://8772194322")
         local RemoteTab = Window:CreateTab("Remotes", "rbxassetid://7246622296")
+        local PlayerTab = Window:CreateTab("Player", "rbxassetid://17769995325")
         local VisualsTab = Window:CreateTab("Visuals", "rbxassetid://136474990712998")
         local TeleportsTab = Window:CreateTab("Teleports", "rbxassetid://10629411698")
         local ConfigTab = Window:CreateTab(" Settings", "rbxassetid://18397244060")
+
         -- Main Tab 
         MainTab:CreateSection("World ://")
 
@@ -270,6 +305,74 @@ task.spawn(function()
 
         -- Remote Tab
         RemoteTab:CreateSection("Test Tab2 ://")
+
+        -- Player Tab
+
+        PlayerTab:CreateSection("Character Settings ://")
+
+        PlayerTab:CreateToggle({
+            Name = "Walkspeed Modifications",
+            Default = env.WALKSPEEDMOD,
+            Callback = function(state)
+                env.SPEEDMODIFIFICATIONS = state
+                ConfigManager.Data.WalkSpeedModifications = state
+                ConfigManager:Save()
+            end
+        })
+
+        PlayerTab:CreateSlider({
+            Name = "Set Walkspeed to",
+            Min = 30,
+            Max = 200,
+            Default = env.SPEEDVALUE,
+            Callback = function(value)
+                env.SPEEDVALUE = value
+                ConfigManager.Data.WalkSpeed = value
+                ConfigManager:Save()
+            end
+        })
+
+        PlayerTab:CreateToggle({
+            Name = "Jump Power Modifications",
+            Default = env.JUMPMODIFICATIONS,
+            Callback = function(state)
+                env.JUMPMODIFICATIONS = state
+                ConfigManager.Data.JumpPowerModifications = state
+                ConfigManager:Save()
+            end
+        })
+
+        PlayerTab:CreateSlider({
+            Name = "Set JumpPower to",
+            Min = 0,
+            Max = 300,
+            Default = env.JUMPVALUE,
+            Callback = function(value)
+                env.JUMPVALUE = value
+                ConfigManager.Data.JumpPower = value
+                ConfigManager:Save()
+            end
+        })
+
+        PlayerTab:CreateToggle({
+            Name = "Infinite Jump",
+            Default = env.INFJUMP,
+            Callback = function(state)
+                env.INFJUMP = state
+                ConfigManager.Data.InfiniteJump = state
+                ConfigManager:Save()
+            end
+        })
+
+        PlayerTab:CreateButton({
+            Name = "Reset Character",
+            Callback = function()
+                local character = player.Character
+                if character then
+                    character:BreakJoints()
+                end
+            end
+        })
 
         -- Visual Tab 
         VisualsTab:CreateSection("Esp Options ://")
@@ -653,16 +756,41 @@ RunService.RenderStepped:Connect(function()
         Lighting.Brightness = 5 
         Lighting.GlobalShadows = false 
         Lighting.ClockTime = 12
-        if Lighting:FindFirstChild("Atmosphere") then
+        if Lighting:FindFirstChildWhichIsA("Atmosphere") then
             Lighting.Atmosphere.Density = 0 
             Lighting.Atmosphere.Offset = 0 
         end
     else
-        Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
-        Lighting.GlobalShadows = true
-        if Lighting:FindFirstChild("Atmosphere") then
-            Lighting.Atmosphere.Density = 0.2
-            Lighting.Atmosphere.Offset = 0.25
+        Lighting.Ambient = GameLighting.Ambient 
+        Lighting.Brightness = GameLighting.Brightness
+        Lighting.ClockTime = GameLighting.ClockTime
+        Lighting.GlobalShadows = GameLighting.GlobalShadows
+        if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+            Lighting.Atmosphere.Density = GameLighting.Atmopshere.Density
+            Lighting.Atmosphere.Offset = GameLighting.Atmopshere.Offset
+        end
+    end
+
+    if env.SPEEDMODIFIFICATIONS and env.SCRIPT_ACTIVE then
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.WalkSpeed = env.SPEEDVALUE
+        end
+    end
+
+    if env.JUMPMODIFIFICATIONS and env.SCRIPT_ACTIVE then
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            character.Humanoid.JumpPower = env.JUMPVALUE
+        end
+    end
+
+    if env.INFJUMP and env.SCRIPT_ACTIVE then
+        local character = player.Character
+        if character and character:FindFirstChild("Humanoid") then
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end
     end
 
@@ -796,6 +924,13 @@ local function closeScriptRoutine()
     env.TRACES = false
     env.FULLBRIGHT = false
 
+    env.WALKSPEEDMOD = false
+    env.JUMPPOWERMOD = false
+    env.INFINITEJUMP = false
+
+    env.WALKSPEED = 30
+    env.JUMPPOWER = 50
+
     for _, esp in pairs(ActivePlayerEsps) do
         pcall(function() esp:Destroy() end)
     end
@@ -816,11 +951,13 @@ local function closeScriptRoutine()
     end
     ActiveDroneTracers = {}
 
-    Lighting.Ambient = Color3.fromRGB(169, 169, 169) 
-    Lighting.GlobalShadows = true
+    Lighting.Ambient = GameLighting.Ambient
+    Lighting.Brightness = GameLighting.Brightness 
+    Lighting.GlobalShadows = GameLighting.GlobalShadows
+    Lighting.ClockTime = GameLighting.ClockTime
     if Lighting:FindFirstChild("Atmosphere") then
-        Lighting.Atmosphere.Density = 0.2
-        Lighting.Atmosphere.Offset = 0.25
+        Lighting.Atmosphere.Density = GameLighting.Atmosphere.Density
+        Lighting.Atmosphere.Offset = GameLighting.Atmosphere.Offset
     end
     
     setupMobileButton(false)
